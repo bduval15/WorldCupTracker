@@ -1,4 +1,15 @@
 const groupLetters = Object.keys(window.SEED_DATA.groups);
+const INITIAL_REFRESH_MIN_MS = 5_000;
+const INITIAL_REFRESH_MAX_MS = 20_000;
+const IDLE_REFRESH_MIN_MS = 4 * 60_000;
+const IDLE_REFRESH_MAX_MS = 7 * 60_000;
+const LIVE_REFRESH_MIN_MS = 75_000;
+const LIVE_REFRESH_MAX_MS = 120_000;
+const SUMMARY_LIVE_MS = 90_000;
+const SUMMARY_FINAL_MS = 12 * 60 * 60_000;
+const summaryFetchedAt = new Map();
+let refreshTimer = null;
+let refreshInFlight = false;
 
 const state = {
   view: "today",
@@ -157,8 +168,7 @@ const els = {
 recalculateStandings();
 initFavoriteSelect();
 render();
-refreshLive();
-setInterval(refreshLive, 30_000);
+scheduleNextRefresh(randomMs(INITIAL_REFRESH_MIN_MS, INITIAL_REFRESH_MAX_MS));
 
 document.querySelectorAll(".nav-button").forEach((button) => {
   button.addEventListener("click", () => {
@@ -182,15 +192,42 @@ els.favoriteSelect.addEventListener("change", (event) => {
   render();
 });
 
-els.refresh.addEventListener("click", refreshLive);
+els.refresh.addEventListener("click", () => refreshLive({ force: true }));
 
-async function refreshLive() {
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    clearTimeout(refreshTimer);
+    refreshTimer = null;
+  } else {
+    scheduleNextRefresh(randomMs(5_000, 15_000));
+  }
+});
+
+function scheduleNextRefresh(delayMs = nextRefreshDelay()) {
+  clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(() => refreshLive(), delayMs);
+}
+
+function nextRefreshDelay() {
+  const hasLive = state.matches.some((match) => match.statusState === "in");
+  return hasLive
+    ? randomMs(LIVE_REFRESH_MIN_MS, LIVE_REFRESH_MAX_MS)
+    : randomMs(IDLE_REFRESH_MIN_MS, IDLE_REFRESH_MAX_MS);
+}
+
+function randomMs(min, max) {
+  return Math.round(min + Math.random() * (max - min));
+}
+
+async function refreshLive(options = {}) {
+  if (refreshInFlight) return;
+  refreshInFlight = true;
   setLiveStatus("Syncing", "ESPN live");
   try {
-    const payload = await window.worldCup.fetchLive();
+    const payload = await window.worldCup.fetchLive({ force: Boolean(options.force) });
     const parsed = parseEspnScoreboard(payload.data);
     if (parsed.matches.length) {
-      await hydrateMatchSummaries(parsed.matches);
+      await hydrateMatchSummaries(parsed.matches, options);
       state.matches = parsed.matches;
       state.groups = { ...state.groups, ...parsed.groups };
       state.source = payload.sourceName;
@@ -199,22 +236,37 @@ async function refreshLive() {
       state.liveError = null;
       recalculateStandings(false);
       initFavoriteSelect();
-      setLiveStatus("Live", formatDateTime(payload.fetchedAt));
+      setLiveStatus(payload.fromCache ? "Cached" : "Live", formatDateTime(payload.fetchedAt));
     } else {
       throw new Error("ESPN returned no World Cup events.");
     }
   } catch (error) {
     state.liveError = error.message;
     setLiveStatus("Offline data", error.message || "Sync unavailable");
+  } finally {
+    refreshInFlight = false;
+    if (!document.hidden) scheduleNextRefresh();
   }
   render();
 }
 
-async function hydrateMatchSummaries(matches) {
-  const hydrateable = matches.filter((match) => match.id && match.statusState !== "pre");
+async function hydrateMatchSummaries(matches, options = {}) {
+  const previous = new Map(state.matches.filter((match) => match.id).map((match) => [match.id, match]));
+  matches.forEach((match) => {
+    const old = previous.get(match.id);
+    if (!old) return;
+    if (Object.keys(old.stats || {}).length) match.stats = old.stats;
+    if (old.details?.length) {
+      match.details = old.details;
+      match.goals = old.goals || [];
+      match.cards = old.cards || [];
+    }
+  });
+  const hydrateable = matches.filter((match) => shouldHydrateSummary(match, options.force));
   await Promise.allSettled(hydrateable.map(async (match) => {
-    const payload = await window.worldCup.fetchMatchSummary(match.id);
+    const payload = await window.worldCup.fetchMatchSummary(match.id, { force: Boolean(options.force) });
     const summary = normalizeSummary(payload.data);
+    summaryFetchedAt.set(match.id, Date.now());
     if (summary.stats && Object.keys(summary.stats).length) match.stats = summary.stats;
     if (summary.plays.length) {
       match.details = summary.plays;
@@ -222,6 +274,16 @@ async function hydrateMatchSummaries(matches) {
       match.cards = summary.plays.filter((detail) => detail.kind === "yellow" || detail.kind === "red");
     }
   }));
+}
+
+function shouldHydrateSummary(match, force = false) {
+  if (!match.id || match.statusState === "pre") return false;
+  if (force) return true;
+  const lastFetched = summaryFetchedAt.get(match.id) || 0;
+  const age = Date.now() - lastFetched;
+  if (!lastFetched && (!match.details?.length || !Object.keys(match.stats || {}).length)) return true;
+  if (match.statusState === "in") return age > SUMMARY_LIVE_MS;
+  return age > SUMMARY_FINAL_MS;
 }
 
 function parseEspnScoreboard(data) {
@@ -334,6 +396,7 @@ async function openMatch(match) {
   if (!match.id || !window.worldCup.fetchMatchSummary) return;
   try {
     const payload = await window.worldCup.fetchMatchSummary(match.id);
+    summaryFetchedAt.set(match.id, Date.now());
     state.selectedSummary = normalizeSummary(payload.data);
     renderMatchDialog(match, state.selectedSummary);
   } catch (error) {

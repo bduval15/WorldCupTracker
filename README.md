@@ -30,6 +30,8 @@ Use one of the release assets:
 
 Live data is fetched from ESPN's public FIFA World Cup scoreboard and match summary endpoints. If the live source is unavailable, the app falls back to bundled tournament data.
 
+The app includes client-side safeguards so it does not poll aggressively: live refreshes are jittered, slower when no match is live, paused while the app is hidden, and match summaries are cached. For large public distribution, use a shared cached feed or proxy and set `WORLD_CUP_SCOREBOARD_URL` for builds that should read from that cache instead of sending every installed desktop client directly to ESPN.
+
 ## Disclaimer
 
 This is an unofficial fan-made desktop app. It is not affiliated with, endorsed by, sponsored by, or connected to FIFA, ESPN, any broadcaster, or any national football association.
