@@ -4,6 +4,7 @@ const state = {
   view: "today",
   statsTab: "playerGoals",
   query: "",
+  favoriteTeam: localStorage.getItem("favoriteTeam") || "",
   source: "Bundled fallback",
   sourceUrl: "",
   lastUpdated: null,
@@ -24,7 +25,7 @@ const viewTitles = {
 };
 
 const searchPlaceholders = {
-  today: "Search teams, groups, matches, scores",
+  today: "Search teams, groups, matches",
   matches: "Search teams, groups, dates, scores, status",
   stats: "Search player names, teams, stats",
   groups: "Search groups or teams",
@@ -145,11 +146,15 @@ const els = {
   refresh: document.getElementById("refreshButton"),
   liveStatus: document.getElementById("liveStatus"),
   liveDetail: document.getElementById("liveDetail"),
+  brandMark: document.getElementById("brandMark"),
+  brandSubtitle: document.getElementById("brandSubtitle"),
+  favoriteSelect: document.getElementById("favoriteTeamSelect"),
   dialog: document.getElementById("matchDialog"),
   dialogBody: document.getElementById("matchDialogBody")
 };
 
 recalculateStandings();
+initFavoriteSelect();
 render();
 refreshLive();
 setInterval(refreshLive, 30_000);
@@ -165,6 +170,14 @@ document.querySelectorAll(".nav-button").forEach((button) => {
 
 els.search.addEventListener("input", (event) => {
   state.query = event.target.value.trim().toLowerCase();
+  render();
+});
+
+els.favoriteSelect.addEventListener("change", (event) => {
+  state.favoriteTeam = event.target.value;
+  if (state.favoriteTeam) localStorage.setItem("favoriteTeam", state.favoriteTeam);
+  else localStorage.removeItem("favoriteTeam");
+  updateFavoriteIdentity();
   render();
 });
 
@@ -184,6 +197,7 @@ async function refreshLive() {
       state.lastUpdated = payload.fetchedAt;
       state.liveError = null;
       recalculateStandings(false);
+      initFavoriteSelect();
       setLiveStatus("Live", formatDateTime(payload.fetchedAt));
     } else {
       throw new Error("ESPN returned no World Cup events.");
@@ -357,6 +371,7 @@ function uniqueEvents(events) {
 
 function render() {
   els.title.textContent = viewTitles[state.view];
+  updateFavoriteIdentity();
   updateSearchUi();
   renderSummary();
   const renderers = { today: renderToday, matches: renderMatches, stats: renderStats, groups: renderGroups, bracket: renderBracket };
@@ -368,6 +383,26 @@ function updateSearchUi() {
   els.search.placeholder = searchPlaceholders[state.view] || "Search teams and matches";
   els.search.disabled = false;
   els.search.removeAttribute("aria-disabled");
+}
+
+function initFavoriteSelect() {
+  const teams = allTeams();
+  if (state.favoriteTeam && !teams.includes(state.favoriteTeam)) state.favoriteTeam = "";
+  els.favoriteSelect.innerHTML = [
+    `<option value="">Choose a team</option>`,
+    ...teams.map((team) => `<option value="${escapeHtml(team)}">${escapeHtml(team)}</option>`)
+  ].join("");
+  els.favoriteSelect.value = state.favoriteTeam;
+  updateFavoriteIdentity();
+}
+
+function updateFavoriteIdentity() {
+  const favorite = state.favoriteTeam;
+  const flag = favorite ? flagUrlForTeam(favorite) : "";
+  els.brandMark.src = flag || "assets/soccer-ball.svg";
+  els.brandMark.classList.toggle("is-flag", Boolean(flag));
+  els.brandSubtitle.textContent = favorite ? `Following ${favorite}` : "2026 Matchday";
+  els.favoriteSelect.value = favorite;
 }
 
 function renderSummary() {
@@ -516,7 +551,7 @@ function bracketMatchCard(match, stage, index) {
 
 function bracketTeam(name, logo, score, winner, abbr = "") {
   return `
-    <div class="bracket-team ${winner ? "winner" : ""}">
+    <div class="bracket-team ${winner ? "winner" : ""} ${isFavoriteTeam(name) ? "favorite-team" : ""}">
       ${teamBadge(name, logo, abbr)}
       <span>${escapeHtml(bracketSlotLabel(name))}</span>
       <strong>${Number.isFinite(score) ? score : "-"}</strong>
@@ -574,7 +609,7 @@ function matchCard(match, showDetails) {
 
 function teamLine(name, logo, score, abbr = "") {
   return `
-    <div class="team-line">
+    <div class="team-line ${isFavoriteTeam(name) ? "favorite-team" : ""}">
       ${teamBadge(name, logo, abbr)}
       <strong>${escapeHtml(name)}</strong>
       <span class="team-score">${Number.isFinite(score) ? score : "-"}</span>
@@ -607,14 +642,39 @@ function groupTable(group) {
 
 function tournamentPulse() {
   const metrics = tournamentMetrics();
-  const panel = div("pulse-panel single-panel");
+  const favorite = favoriteTeamPanel();
+  const panel = div(`pulse-panel ${favorite ? "" : "single-panel"}`);
   panel.innerHTML = `
+    ${favorite || ""}
     <article class="group-leaders-card">
       <span>Group leaders</span>
       ${leaderList(metrics.groupLeaders, 12)}
     </article>
   `;
   return panel;
+}
+
+function favoriteTeamPanel() {
+  if (!state.favoriteTeam) return "";
+  const matches = favoriteTeamMatches();
+  const live = matches.find((match) => match.statusState === "in");
+  const next = matches.find((match) => !match.completed && match.statusState !== "in");
+  const latest = matches.filter((match) => match.completed).at(-1);
+  const feature = live || next || latest;
+  const standing = favoriteTeamStanding();
+  return `
+    <article class="favorite-team-card">
+      <span>Following</span>
+      <div class="favorite-team-head">
+        ${teamBadge(state.favoriteTeam)}
+        <strong>${escapeHtml(state.favoriteTeam)}</strong>
+      </div>
+      <div class="favorite-team-details">
+        <p><b>${feature ? favoriteMatchLabel(feature) : "Schedule pending"}</b><small>${feature ? favoriteMatchDetail(feature) : "Waiting for match data"}</small></p>
+        <p><b>${standing ? `Group ${standing.group}` : "Group"}</b><small>${standing ? `${standing.pts} pts / GD ${standing.gd > 0 ? `+${standing.gd}` : standing.gd}` : "Not available yet"}</small></p>
+      </div>
+    </article>
+  `;
 }
 
 function leaderList(items, limit = 4) {
@@ -809,6 +869,46 @@ function tournamentMetrics() {
       ? { value: `${latest.homeAbbr || codeForTeam(latest.home)} ${safeScore(latest.homeScore)}-${safeScore(latest.awayScore)} ${latest.awayAbbr || codeForTeam(latest.away)}`, detail: `${formatMatchDate(latest.date)} / ${latest.status}`, match: latest }
       : { value: "No final yet", detail: "waiting for results", match: null }
   };
+}
+
+function allTeams() {
+  return [...new Set([
+    ...groupLetters.flatMap((group) => state.groups[group] || []),
+    ...state.matches.flatMap((match) => [match.home, match.away])
+  ].filter((team) => team && !/Winner|Runner-up|3rd Group|Loser|Semifinal|Quarterfinal|Round of 16/i.test(team)))]
+    .sort((a, b) => a.localeCompare(b));
+}
+
+function isFavoriteTeam(team) {
+  return Boolean(state.favoriteTeam && team === state.favoriteTeam);
+}
+
+function favoriteTeamMatches() {
+  if (!state.favoriteTeam) return [];
+  return state.matches
+    .filter((match) => match.home === state.favoriteTeam || match.away === state.favoriteTeam)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+}
+
+function favoriteTeamStanding() {
+  if (!state.favoriteTeam) return null;
+  for (const group of groupLetters) {
+    const row = (state.standings[group] || []).find((item) => item.team === state.favoriteTeam);
+    if (row) return { ...row, group };
+  }
+  return null;
+}
+
+function favoriteMatchLabel(match) {
+  if (match.statusState === "in") return "Live now";
+  if (match.completed) return "Latest result";
+  return "Next match";
+}
+
+function favoriteMatchDetail(match) {
+  const opponent = match.home === state.favoriteTeam ? match.away : match.home;
+  const score = match.completed || match.statusState === "in" ? ` / ${scoreText(match)}` : "";
+  return `${opponent}${score} / ${formatMatchDate(match.date)} ${match.time}`;
 }
 
 function rankedScorers() {

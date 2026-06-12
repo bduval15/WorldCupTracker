@@ -11,11 +11,11 @@
       <aside class="sidebar">
         <div class="brand">
           <div class="brand-mark" aria-hidden="true">
-            <img src="assets/soccer-ball.svg" alt="">
+            <img id="brandMark" src="assets/soccer-ball.svg" alt="">
           </div>
           <div>
             <div class="brand-title">World Cup</div>
-            <div class="brand-subtitle">2026 Matchday</div>
+            <div id="brandSubtitle" class="brand-subtitle">2026 Matchday</div>
           </div>
         </div>
         <nav class="nav" aria-label="Views">
@@ -25,6 +25,12 @@
           <button class="nav-button" data-view="groups">Groups</button>
           <button class="nav-button" data-view="bracket">Bracket</button>
         </nav>
+        <label class="favorite-picker">
+          <span>Follow team</span>
+          <select id="favoriteTeamSelect" aria-label="Favorite team">
+            <option value="">Choose a team</option>
+          </select>
+        </label>
         <div class="live-card">
           <span class="pulse" aria-hidden="true"></span>
           <div>
