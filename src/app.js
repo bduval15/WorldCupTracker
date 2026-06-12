@@ -16,11 +16,19 @@ const state = {
 };
 
 const viewTitles = {
-  today: "Today",
+  today: "Home",
   matches: "Match Center",
   stats: "Stats",
   groups: "Groups",
   bracket: "Knockout"
+};
+
+const searchPlaceholders = {
+  today: "Search home matches by team or group",
+  matches: "Search teams, groups, scores, or status",
+  stats: "Use the stat tabs below",
+  groups: "Group tables are shown below",
+  bracket: "Bracket is ordered by match path"
 };
 
 const statsTabs = [
@@ -349,10 +357,22 @@ function uniqueEvents(events) {
 
 function render() {
   els.title.textContent = viewTitles[state.view];
+  updateSearchUi();
   renderSummary();
   const renderers = { today: renderToday, matches: renderMatches, stats: renderStats, groups: renderGroups, bracket: renderBracket };
   els.root.innerHTML = "";
   els.root.appendChild(renderers[state.view]());
+}
+
+function updateSearchUi() {
+  const searchable = state.view === "today" || state.view === "matches";
+  els.search.placeholder = searchPlaceholders[state.view] || "Search teams and matches";
+  els.search.disabled = !searchable;
+  els.search.setAttribute("aria-disabled", String(!searchable));
+  if (!searchable && state.query) {
+    state.query = "";
+    els.search.value = "";
+  }
 }
 
 function renderSummary() {
