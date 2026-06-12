@@ -1,0 +1,63 @@
+{
+  "name": "world-cup-widget",
+  "productName": "World Cup 2026 Live",
+  "version": "1.0.0",
+  "description": "A live Windows desktop dashboard for the FIFA World Cup 2026.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --check main.js && node --check preload.js && node --check src/app.js && node --check src/seed-data.js",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --win --x64",
+    "dist:desktop": "electron-builder --win --x64 --config.directories.output=%USERPROFILE%\\Desktop\\WorldCup2026LiveRelease"
+  },
+  "keywords": [
+    "world-cup",
+    "desktop",
+    "electron",
+    "live-scores"
+  ],
+  "author": "bduval15",
+  "license": "MIT",
+  "build": {
+    "appId": "io.github.bduval15.worldcuptracker",
+    "productName": "World Cup 2026 Live",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "package.json"
+    ],
+    "win": {
+      "icon": "src/assets/soccer-ball.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "World Cup 2026 Live"
+    }
+  },
+  "devDependencies": {
+    "electron": "^42.4.0",
+    "electron-builder": "^26.15.3"
+  }
+}

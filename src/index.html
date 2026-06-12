@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Cup 2026 Live</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <img src="assets/soccer-ball.svg" alt="">
+          </div>
+          <div>
+            <div class="brand-title">World Cup</div>
+            <div class="brand-subtitle">2026 Matchday</div>
+          </div>
+        </div>
+        <nav class="nav" aria-label="Views">
+          <button class="nav-button active" data-view="today">Today</button>
+          <button class="nav-button" data-view="matches">Matches</button>
+          <button class="nav-button" data-view="groups">Groups</button>
+          <button class="nav-button" data-view="bracket">Bracket</button>
+        </nav>
+        <div class="live-card">
+          <span class="pulse" aria-hidden="true"></span>
+          <div>
+            <strong id="liveStatus">Preparing live feed</strong>
+            <span id="liveDetail">Bundled data is ready.</span>
+          </div>
+        </div>
+      </aside>
+
+      <main class="content">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">FIFA World Cup 2026</p>
+            <h1 id="viewTitle">Today</h1>
+          </div>
+          <div class="top-actions">
+            <input id="searchInput" type="search" placeholder="Search teams, players, matches">
+            <button id="refreshButton" class="action-button">Sync</button>
+          </div>
+        </header>
+
+        <section id="summary" class="summary-grid"></section>
+        <section id="viewRoot" class="view-root"></section>
+      </main>
+    </div>
+
+    <dialog id="matchDialog">
+      <div class="dialog-shell">
+        <div id="matchDialogBody"></div>
+        <form method="dialog">
+          <button class="action-button">Close</button>
+        </form>
+      </div>
+    </dialog>
+
+    <script src="seed-data.js"></script>
+    <script>
+      window.addEventListener("error", (event) => {
+        const root = document.getElementById("viewRoot");
+        if (root) {
+          root.innerHTML = `<div class="empty error-box"><strong>App startup error</strong><span>${event.message}</span></div>`;
+        }
+      });
+      window.addEventListener("unhandledrejection", (event) => {
+        const root = document.getElementById("viewRoot");
+        if (root) {
+          root.innerHTML = `<div class="empty error-box"><strong>Live update error</strong><span>${event.reason?.message || event.reason}</span></div>`;
+        }
+      });
+    </script>
+    <script src="app.js"></script>
+  </body>
+</html>
