@@ -354,9 +354,27 @@ function renderSummary() {
   const metrics = tournamentMetrics();
   els.summary.innerHTML = [
     summaryCard("Golden boot", metrics.leadingScorer.name, metrics.leadingScorer.detail),
-    summaryCard("Next kickoff", metrics.nextMatch.value, metrics.nextMatch.detail),
-    summaryCard("Latest result", metrics.latestResult.value, metrics.latestResult.detail)
+    summaryCard("Next kickoff", metrics.nextMatch.value, metrics.nextMatch.detail, metrics.nextMatch.match ? "next" : ""),
+    summaryCard("Latest result", metrics.latestResult.value, metrics.latestResult.detail, metrics.latestResult.match ? "latest" : "")
   ].join("");
+  bindSummaryMatchCard("next", metrics.nextMatch.match);
+  bindSummaryMatchCard("latest", metrics.latestResult.match);
+}
+
+function bindSummaryMatchCard(action, match) {
+  if (!action || !match) return;
+  const card = els.summary.querySelector(`[data-summary-action="${action}"]`);
+  if (!card) return;
+  card.tabIndex = 0;
+  card.setAttribute("role", "button");
+  card.setAttribute("aria-label", `Open ${card.querySelector("span")?.textContent || "match"} details`);
+  card.addEventListener("click", () => openMatch(match));
+  card.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openMatch(match);
+    }
+  });
 }
 
 function renderToday() {
@@ -516,7 +534,6 @@ function matchCard(match, showDetails) {
     </div>
     <div class="match-footer">
       <span>${formatMatchDate(match.date)} / ${escapeHtml(match.time)}</span>
-      <span>${escapeHtml(match.broadcasts.slice(0, 3).join(", ") || "Broadcast TBD")}</span>
     </div>
     ${showDetails ? `<div class="quick-stats">
       <span>${match.goals.length} goals</span>
@@ -628,7 +645,6 @@ function renderMatchDialog(match, summary = null) {
     </div>
     <div class="detail-grid">
       ${detailTile("Kickoff", `${formatMatchDate(match.date)} / ${match.time}`)}
-      ${detailTile("Broadcast", match.broadcasts.join(", ") || "TBD")}
       ${detailTile("Officials", officials)}
     </div>
     ${match.headline ? `<p class="headline">${escapeHtml(match.headline)}</p>` : ""}
@@ -737,11 +753,11 @@ function tournamentMetrics() {
     groupLeaders,
     leadingScorer: scorers[0] || { name: "No goals yet", detail: "waiting for kickoff" },
     nextMatch: next
-      ? { value: `${next.homeAbbr || codeForTeam(next.home)} vs ${next.awayAbbr || codeForTeam(next.away)}`, detail: `${formatMatchDate(next.date)} / ${next.time}` }
-      : { value: "No upcoming match", detail: "schedule complete" },
+      ? { value: `${next.homeAbbr || codeForTeam(next.home)} vs ${next.awayAbbr || codeForTeam(next.away)}`, detail: `${formatMatchDate(next.date)} / ${next.time}`, match: next }
+      : { value: "No upcoming match", detail: "schedule complete", match: null },
     latestResult: latest
-      ? { value: `${latest.homeAbbr || codeForTeam(latest.home)} ${safeScore(latest.homeScore)}-${safeScore(latest.awayScore)} ${latest.awayAbbr || codeForTeam(latest.away)}`, detail: `${formatMatchDate(latest.date)} / ${latest.status}` }
-      : { value: "No final yet", detail: "waiting for results" }
+      ? { value: `${latest.homeAbbr || codeForTeam(latest.home)} ${safeScore(latest.homeScore)}-${safeScore(latest.awayScore)} ${latest.awayAbbr || codeForTeam(latest.away)}`, detail: `${formatMatchDate(latest.date)} / ${latest.status}`, match: latest }
+      : { value: "No final yet", detail: "waiting for results", match: null }
   };
 }
 
@@ -931,8 +947,9 @@ function setLiveStatus(status, detail) {
   els.liveDetail.textContent = detail;
 }
 
-function summaryCard(label, value, detail) {
-  return `<article class="summary-card"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong><small>${escapeHtml(detail)}</small></article>`;
+function summaryCard(label, value, detail, action = "") {
+  const actionAttr = action ? ` data-summary-action="${escapeHtml(action)}"` : "";
+  return `<article class="summary-card"${actionAttr}><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong><small>${escapeHtml(detail)}</small></article>`;
 }
 
 function sectionTitle(text) {

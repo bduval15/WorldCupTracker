@@ -227,6 +227,20 @@ input[type="search"]:focus {
 }
 .summary-card small { color: var(--muted); }
 
+.summary-card[data-summary-action] {
+  cursor: pointer;
+  transition: transform .14s ease, border-color .14s ease, background .14s ease, box-shadow .14s ease;
+}
+
+.summary-card[data-summary-action]:hover,
+.summary-card[data-summary-action]:focus {
+  outline: 2px solid rgba(247, 201, 72, .22);
+  border-color: var(--gold);
+  background: var(--panel-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
 .stack, .match-center, .bracket-page, .bracket-section {
   display: grid;
   gap: 16px;
