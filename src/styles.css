@@ -383,9 +383,13 @@ input[type="search"]:focus {
 
 .pulse-panel {
   display: grid;
-  grid-template-columns: minmax(280px, .7fr) minmax(420px, 1.3fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   align-items: stretch;
+}
+
+.pulse-panel.single-panel {
+  grid-template-columns: 1fr;
 }
 
 .pulse-panel article {
@@ -404,6 +408,14 @@ input[type="search"]:focus {
   font-size: 12px;
   font-weight: 850;
   text-transform: uppercase;
+}
+
+.group-leaders-card {
+  grid-column: span 2;
+}
+
+.pulse-panel.single-panel .group-leaders-card {
+  grid-column: auto;
 }
 
 .group-leaders-card .leader-list {
@@ -451,6 +463,134 @@ input[type="search"]:focus {
   text-align: right;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.stats-view {
+  display: grid;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(10, 22, 38, .92);
+}
+
+.stats-tabs {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  border-bottom: 1px solid var(--line);
+  background: rgba(23, 37, 64, .72);
+}
+
+.stats-tab {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 12px 10px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 850;
+}
+
+.stats-tab.active {
+  color: var(--green);
+  border-bottom-color: var(--green);
+  background: rgba(18, 184, 134, .1);
+}
+
+.stats-tab img {
+  width: 16px;
+  height: 16px;
+}
+
+.stats-tab i {
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(57, 167, 255, .14);
+  color: var(--gold);
+  font-size: 10px;
+  font-style: normal;
+}
+
+.stats-board {
+  display: grid;
+}
+
+.stats-board-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(247, 201, 72, .26);
+  background: rgba(247, 201, 72, .06);
+}
+
+.stats-board-head strong {
+  color: var(--gold);
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.stats-board-head span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.stats-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stats-list li {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) minmax(120px, auto) 48px;
+  align-items: center;
+  gap: 12px;
+  min-height: 42px;
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(142, 164, 191, .12);
+}
+
+.stats-list li:last-child {
+  border-bottom: 0;
+}
+
+.stats-rank {
+  color: var(--gold);
+  font-weight: 900;
+  text-align: center;
+}
+
+.stats-list strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stats-list small {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stats-list b {
+  color: var(--green);
+  font-size: 18px;
+  text-align: right;
 }
 
 .groups-grid {
@@ -923,6 +1063,7 @@ dialog form {
   .app-shell { grid-template-columns: 1fr; }
   .sidebar { position: static; }
   .summary-grid, .detail-grid, .dialog-columns, .pulse-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .group-leaders-card { grid-column: auto; }
   .group-leaders-card .leader-list {
     grid-auto-flow: row;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -934,6 +1075,10 @@ dialog form {
 
 @media (max-width: 820px) {
   .pulse-panel { grid-template-columns: 1fr; }
+  .group-leaders-card { grid-column: auto; }
+  .stats-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .stats-list li { grid-template-columns: 34px minmax(0, 1fr) 44px; }
+  .stats-list small { display: none; }
 }
 
 @media (max-width: 640px) {
@@ -941,4 +1086,6 @@ dialog form {
   .summary-grid, .detail-grid, .dialog-columns, .pulse-panel { grid-template-columns: 1fr; }
   .group-leaders-card .leader-list { grid-template-columns: 1fr; }
   .match-grid, .groups-grid { grid-template-columns: 1fr; }
+  .stats-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stats-tab { justify-content: flex-start; }
 }

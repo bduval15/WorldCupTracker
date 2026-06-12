@@ -2,6 +2,7 @@ const groupLetters = Object.keys(window.SEED_DATA.groups);
 
 const state = {
   view: "today",
+  statsTab: "goals",
   query: "",
   source: "Bundled fallback",
   sourceUrl: "",
@@ -17,9 +18,18 @@ const state = {
 const viewTitles = {
   today: "Today",
   matches: "Match Center",
+  stats: "Stats",
   groups: "Groups",
   bracket: "Knockout"
 };
+
+const statsTabs = [
+  { id: "goals", label: "Goals", icon: "soccer-ball.svg" },
+  { id: "assists", label: "Assists", iconText: "A" },
+  { id: "yellows", label: "Yellows", iconText: "Y" },
+  { id: "reds", label: "Reds", iconText: "R" },
+  { id: "teams", label: "Teams", iconText: "T" }
+];
 
 const stageOrder = [
   "Round of 32",
@@ -157,6 +167,7 @@ async function refreshLive() {
     const payload = await window.worldCup.fetchLive();
     const parsed = parseEspnScoreboard(payload.data);
     if (parsed.matches.length) {
+      await hydrateMatchSummaries(parsed.matches);
       state.matches = parsed.matches;
       state.groups = { ...state.groups, ...parsed.groups };
       state.source = payload.sourceName;
@@ -173,6 +184,20 @@ async function refreshLive() {
     setLiveStatus("Offline data", error.message || "Sync unavailable");
   }
   render();
+}
+
+async function hydrateMatchSummaries(matches) {
+  const hydrateable = matches.filter((match) => match.id && match.statusState !== "pre");
+  await Promise.allSettled(hydrateable.map(async (match) => {
+    const payload = await window.worldCup.fetchMatchSummary(match.id);
+    const summary = normalizeSummary(payload.data);
+    if (summary.stats && Object.keys(summary.stats).length) match.stats = summary.stats;
+    if (summary.plays.length) {
+      match.details = summary.plays;
+      match.goals = summary.plays.filter((detail) => detail.kind === "goal");
+      match.cards = summary.plays.filter((detail) => detail.kind === "yellow" || detail.kind === "red");
+    }
+  }));
 }
 
 function parseEspnScoreboard(data) {
@@ -241,11 +266,16 @@ function normalizeEspnEvent(event, fallbackNumber) {
 function normalizeDetail(detail, competitors = []) {
   const text = detail.type?.text || detail.play?.type?.text || "";
   const teamId = String(detail.team?.id || detail.play?.team?.id || "");
-  const team = competitors.find((item) => String(item.id) === teamId || String(item.team?.id) === teamId)?.team?.displayName || detail.play?.team?.displayName || "";
-  const athlete = detail.athletesInvolved?.[0]?.displayName || detail.play?.participants?.[0]?.athlete?.displayName || "";
+  const team = competitors.find((item) => String(item.id) === teamId || String(item.team?.id) === teamId)?.team?.displayName || detail.team?.displayName || detail.play?.team?.displayName || "";
+  const athletes = detail.athletesInvolved?.map((item) => item.displayName).filter(Boolean)
+    || detail.play?.participants?.map((item) => item.athlete?.displayName).filter(Boolean)
+    || [];
+  const athlete = athletes[0] || "";
+  const assist = athletes[1] || extractAssistName(detail.text || detail.play?.text || "");
   const lower = text.toLowerCase();
   let kind = "event";
   if (detail.scoringPlay || lower.includes("goal")) kind = "goal";
+  if (!detail.scoringPlay && lower.includes("assist")) kind = "assist";
   if (detail.yellowCard || lower.includes("yellow")) kind = "yellow";
   if (detail.redCard || lower.includes("red card")) kind = "red";
   if (lower.includes("substitution")) kind = "sub";
@@ -254,6 +284,7 @@ function normalizeDetail(detail, competitors = []) {
     minute: detail.clock?.displayValue || detail.time?.displayValue || "",
     team,
     athlete,
+    assist,
     text: detail.play?.text || detail.text || [athlete, text].filter(Boolean).join(" - "),
     type: text
   };
@@ -285,8 +316,11 @@ async function openMatch(match) {
 
 function normalizeSummary(summary) {
   const teams = summary.boxscore?.teams || [];
+  const competitors = summary.header?.competitions?.[0]?.competitors || [];
   const stats = Object.fromEntries(teams.map((item) => [item.team.displayName, mapStats(item.statistics || [])]));
-  const plays = (summary.plays || []).map((play) => normalizeDetail(play)).filter((play) => play.text);
+  const keyEvents = (summary.keyEvents || []).map((play) => normalizeDetail(play, competitors)).filter((play) => play.text || play.type);
+  const commentary = (summary.commentary || []).map((item) => normalizeDetail(item.play || item, competitors)).filter((play) => play.text || play.type);
+  const plays = uniqueEvents(keyEvents.concat(commentary));
   const officials = (summary.gameInfo?.officials || []).map((official) => official.displayName || official.fullName).filter(Boolean);
   const standings = summary.standings?.groups || [];
   return {
@@ -298,10 +332,20 @@ function normalizeSummary(summary) {
   };
 }
 
+function uniqueEvents(events) {
+  const seen = new Set();
+  return events.filter((event) => {
+    const key = [event.minute, event.kind, event.athlete, event.text].join("|");
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function render() {
   els.title.textContent = viewTitles[state.view];
   renderSummary();
-  const renderers = { today: renderToday, matches: renderMatches, groups: renderGroups, bracket: renderBracket };
+  const renderers = { today: renderToday, matches: renderMatches, stats: renderStats, groups: renderGroups, bracket: renderBracket };
   els.root.innerHTML = "";
   els.root.appendChild(renderers[state.view]());
 }
@@ -350,6 +394,35 @@ function renderGroups() {
   const grid = div("groups-grid");
   groupLetters.forEach((group) => grid.append(groupTable(group)));
   return grid;
+}
+
+function renderStats() {
+  const config = statsConfig()[state.statsTab] || statsConfig().goals;
+  const items = config.items();
+  const wrap = div("stats-view");
+  const tabs = div("stats-tabs");
+  statsTabs.forEach((tab) => {
+    const button = document.createElement("button");
+    button.className = `stats-tab ${tab.id === state.statsTab ? "active" : ""}`;
+    button.type = "button";
+    button.innerHTML = `${statsTabIcon(tab)}<span>${tab.label}</span>`;
+    button.addEventListener("click", () => {
+      state.statsTab = tab.id;
+      render();
+    });
+    tabs.append(button);
+  });
+
+  const board = div("stats-board");
+  board.innerHTML = `
+    <div class="stats-board-head">
+      <strong>${escapeHtml(config.title)}</strong>
+      <span>Top ${items.length}</span>
+    </div>
+    ${statsRows(items, config)}
+  `;
+  wrap.append(tabs, board);
+  return wrap;
 }
 
 function renderBracket() {
@@ -492,12 +565,8 @@ function groupTable(group) {
 
 function tournamentPulse() {
   const metrics = tournamentMetrics();
-  const panel = div("pulse-panel");
+  const panel = div("pulse-panel single-panel");
   panel.innerHTML = `
-    <article>
-      <span>Top scorers</span>
-      ${leaderList(metrics.scorers)}
-    </article>
     <article class="group-leaders-card">
       <span>Group leaders</span>
       ${leaderList(metrics.groupLeaders, 12)}
@@ -513,6 +582,33 @@ function leaderList(items, limit = 4) {
   `).join("")}</ol>`;
 }
 
+function statsConfig() {
+  return {
+    goals: { title: "Goals Leaders", valueLabel: "goals", items: rankedScorers },
+    assists: { title: "Assists Leaders", valueLabel: "assists", items: rankedAssists },
+    yellows: { title: "Yellow Card Leaders", valueLabel: "yellow cards", items: () => rankedCardsByKind("yellow") },
+    reds: { title: "Red Card Leaders", valueLabel: "red cards", items: () => rankedCardsByKind("red") },
+    teams: { title: "Team Leaders", valueLabel: "points", items: rankedTeams }
+  };
+}
+
+function statsTabIcon(tab) {
+  if (tab.icon) return `<img src="assets/${escapeHtml(tab.icon)}" alt="">`;
+  return `<i>${escapeHtml(tab.iconText || tab.label[0])}</i>`;
+}
+
+function statsRows(items, config) {
+  if (!items.length) return `<div class="empty small">Waiting for ${escapeHtml(config.valueLabel)} data.</div>`;
+  return `<ol class="stats-list">${items.map((item, index) => `
+    <li>
+      <span class="stats-rank">${index + 1}</span>
+      <strong>${escapeHtml(item.name)}</strong>
+      <small>${escapeHtml(item.team || item.meta || "")}</small>
+      <b>${escapeHtml(item.value)}</b>
+    </li>
+  `).join("")}</ol>`;
+}
+
 function teamCell(row) {
   return `<span class="table-team">${teamBadge(row.team, row.logo)}${escapeHtml(row.team)}</span>`;
 }
@@ -520,7 +616,7 @@ function teamCell(row) {
 function renderMatchDialog(match, summary = null) {
   const stats = summary?.stats && Object.keys(summary.stats).length ? summary.stats : match.stats;
   const timeline = summary?.plays?.length ? summary.plays : match.details;
-  const meaningfulTimeline = timeline.filter((item) => ["goal", "yellow", "red", "sub"].includes(item.kind) || /shot|foul|corner|penalty|end|start/i.test(item.text)).slice(-80);
+  const meaningfulTimeline = timeline.filter((item) => ["goal", "assist", "yellow", "red", "sub"].includes(item.kind) || /shot|foul|corner|penalty|end|start/i.test(item.text)).slice(-80);
   const officials = summary?.officials?.length ? summary.officials.join(", ") : "TBD";
   const espnLink = match.links.Summary || match.links.Report || match.links.Statistics || state.sourceUrl;
 
@@ -588,6 +684,7 @@ function eventList(events, dense = false) {
 
 function eventLabel(event) {
   if (event.kind === "goal") return `Goal ${event.athlete || event.team}`;
+  if (event.kind === "assist") return `Assist ${event.athlete || event.team}`;
   if (event.kind === "yellow") return `Yellow card ${event.athlete || event.team}`;
   if (event.kind === "red") return `Red card ${event.athlete || event.team}`;
   if (event.kind === "sub") return "Substitution";
@@ -664,8 +761,38 @@ function rankedScorers() {
     .map((item) => ({
       name: item.name,
       value: String(item.goals),
+      team: [...item.teams][0] || "",
       detail: `${item.goals} goal${item.goals === 1 ? "" : "s"}${item.teams.size ? ` / ${[...item.teams][0]}` : ""}`
     }));
+}
+
+function rankedAssists() {
+  const totals = new Map();
+  state.matches.forEach((match) => {
+    match.goals.forEach((goal) => {
+      if (goal.assist) addPlayerTotal(totals, goal.assist, goal.team, "assists");
+    });
+  });
+  return [...totals.values()]
+    .sort((a, b) => b.assists - a.assists || a.name.localeCompare(b.name))
+    .map((item) => ({
+      name: item.name,
+      value: String(item.assists),
+      team: [...item.teams][0] || "",
+      detail: `${item.assists} assist${item.assists === 1 ? "" : "s"}${item.teams.size ? ` / ${[...item.teams][0]}` : ""}`
+    }));
+}
+
+function extractAssistName(text) {
+  const match = String(text || "").match(/Assisted by ([^.]+?)(?: with | following |\.|$)/i);
+  return match ? match[1].trim() : "";
+}
+
+function addPlayerTotal(totals, name, team, key) {
+  const entry = totals.get(name) || { name, teams: new Set(), [key]: 0 };
+  entry[key] += 1;
+  if (team) entry.teams.add(team);
+  totals.set(name, entry);
 }
 
 function rankedCards() {
@@ -684,8 +811,39 @@ function rankedCards() {
     .map((item) => ({
       name: item.name,
       value: `${item.yellow + item.red}`,
+      team: item.team,
       detail: `${item.yellow}Y / ${item.red}R${item.team ? ` / ${item.team}` : ""}`
     }));
+}
+
+function rankedCardsByKind(kind) {
+  const totals = new Map();
+  state.matches.forEach((match) => {
+    match.cards.filter((card) => card.kind === kind).forEach((card) => {
+      const name = card.athlete || card.team || "Unknown";
+      const entry = totals.get(name) || { name, count: 0, team: card.team || "" };
+      entry.count += 1;
+      if (card.team) entry.team = card.team;
+      totals.set(name, entry);
+    });
+  });
+  return [...totals.values()]
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
+    .map((item) => ({
+      name: item.name,
+      value: String(item.count),
+      team: item.team,
+      detail: `${item.count} ${kind === "yellow" ? "yellow" : "red"} card${item.count === 1 ? "" : "s"}${item.team ? ` / ${item.team}` : ""}`
+    }));
+}
+
+function rankedTeams() {
+  return groupLetters.flatMap((group) => (state.standings[group] || []).map((row) => ({
+    name: row.team,
+    value: String(row.pts),
+    team: `Group ${group} / GD ${row.gd > 0 ? `+${row.gd}` : row.gd}`,
+    detail: `${row.pts} pts / GD ${row.gd > 0 ? `+${row.gd}` : row.gd}`
+  }))).sort((a, b) => Number(b.value) - Number(a.value) || a.name.localeCompare(b.name));
 }
 
 function rankedTeamStat(key, label) {
