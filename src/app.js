@@ -388,7 +388,10 @@ function updateSearchUi() {
 
 function initFavoriteSelect() {
   const teams = allTeams();
-  if (state.favoriteTeam && !teams.includes(state.favoriteTeam)) state.favoriteTeam = "";
+  if (state.favoriteTeam && !teams.includes(state.favoriteTeam)) {
+    state.favoriteTeam = "";
+    localStorage.removeItem("favoriteTeam");
+  }
   els.favoriteSelect.innerHTML = [
     `<option value="">Choose a team</option>`,
     ...teams.map((team) => `<option value="${escapeHtml(team)}">${escapeHtml(team)}</option>`)
@@ -399,9 +402,11 @@ function initFavoriteSelect() {
 
 function updateFavoriteIdentity() {
   const favorite = state.favoriteTeam;
-  const flag = favorite ? flagUrlForTeam(favorite) : "";
+  const flag = favorite ? flagUrlForTeam(favorite, "w160") : "";
+  const mark = els.brandMark.closest(".brand-mark");
   els.brandMark.src = flag || "assets/soccer-ball.svg";
   els.brandMark.classList.toggle("is-flag", Boolean(flag));
+  mark?.classList.toggle("is-favorite", Boolean(flag));
   els.brandSubtitle.textContent = favorite ? `Following ${favorite}` : "2026 Matchday";
   els.favoriteSelect.value = favorite;
 }
@@ -901,12 +906,17 @@ function allTeams() {
   return [...new Set([
     ...groupLetters.flatMap((group) => state.groups[group] || []),
     ...state.matches.flatMap((match) => [match.home, match.away])
-  ].filter((team) => team && !/Winner|Runner-up|3rd Group|Loser|Semifinal|Quarterfinal|Round of 16/i.test(team)))]
+  ].filter((team) => team && !isPlaceholderTeam(team)))]
     .sort((a, b) => a.localeCompare(b));
 }
 
 function isFavoriteTeam(team) {
   return Boolean(state.favoriteTeam && team === state.favoriteTeam);
+}
+
+function isPlaceholderTeam(team) {
+  return /Group [A-L]\s+(Winner|2nd Place)|Third Place Group|3rd Group|Runner-up|Round of|Winner Match|Match \d+|Winner|Loser|Semifinal|Quarterfinal/i
+    .test(String(team || ""));
 }
 
 function favoriteTeamMatches() {
@@ -1321,9 +1331,9 @@ function codeForTeam(team) {
   return teamCodes[team] || String(team || "").slice(0, 3).toUpperCase();
 }
 
-function flagUrlForTeam(team) {
+function flagUrlForTeam(team, size = "w80") {
   const code = teamFlagCodes[team];
-  return code ? `https://flagcdn.com/w40/${code}.png` : "";
+  return code ? `https://flagcdn.com/${size}/${code}.png` : "";
 }
 
 function teamBadge(name, logo = "", abbr = "") {
