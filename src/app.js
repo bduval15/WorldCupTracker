@@ -722,7 +722,8 @@ function teamCell(row) {
 function renderMatchDialog(match, summary = null) {
   const stats = summary?.stats && Object.keys(summary.stats).length ? summary.stats : match.stats;
   const timeline = summary?.plays?.length ? summary.plays : match.details;
-  const meaningfulTimeline = timeline.filter(isTimelineEvent).slice(-80);
+  const meaningfulTimeline = timeline.filter(isTimelineEvent).sort(sortEventsByMinute).slice(-80);
+  const keyEvents = match.goals.concat(match.cards).sort(sortEventsByMinute);
   const officials = summary?.officials?.length ? summary.officials.join(", ") : "TBD";
   const espnLink = match.links.Summary || match.links.Report || match.links.Statistics || state.sourceUrl;
 
@@ -746,7 +747,7 @@ function renderMatchDialog(match, summary = null) {
       </section>
       <section>
         <h3>Key Events</h3>
-        ${eventList(match.goals.concat(match.cards))}
+        ${eventList(keyEvents)}
       </section>
     </div>
     <section>
@@ -799,6 +800,17 @@ function isTimelineEvent(event) {
   if (/delay|var check|injury break|cooling break/.test(text)) return false;
   return ["goal", "assist", "yellow", "red", "sub"].includes(event.kind)
     || /shot|foul|corner|penalty|offside|save|miss|blocked/i.test(text);
+}
+
+function sortEventsByMinute(a, b) {
+  return eventMinuteValue(a) - eventMinuteValue(b);
+}
+
+function eventMinuteValue(event) {
+  const raw = String(event.minute || "");
+  const match = raw.match(/(\d+)(?:\D+(\d+))?/);
+  if (!match) return Number.MAX_SAFE_INTEGER;
+  return Number(match[1]) * 100 + Number(match[2] || 0);
 }
 
 function eventLabel(event) {
