@@ -1043,8 +1043,58 @@ dialog form {
   background: var(--panel-soft);
 }
 .event-list.dense {
+  position: relative;
   max-height: none;
   overflow: visible;
+  gap: 0;
+  padding-left: 12px;
+}
+.event-list.dense::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 27px;
+  width: 1px;
+  background: linear-gradient(180deg, rgba(247, 201, 72, .45), rgba(57, 167, 255, .18));
+}
+.event-list.dense li {
+  grid-template-columns: 52px 1fr;
+  gap: 14px;
+  padding: 10px 0 10px 14px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  position: relative;
+}
+.event-list.dense li + li {
+  border-top: 1px solid rgba(142, 164, 191, .12);
+}
+.event-list.dense li::before {
+  content: "";
+  position: absolute;
+  left: 10px;
+  top: 18px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--blue);
+  box-shadow: 0 0 0 4px rgba(57, 167, 255, .12);
+}
+.event-list.dense li.goal::before { background: var(--green); box-shadow: 0 0 0 4px rgba(18, 184, 134, .14); }
+.event-list.dense li.yellow::before { background: var(--yellow); box-shadow: 0 0 0 4px rgba(247, 201, 72, .14); }
+.event-list.dense li.red::before { background: var(--red); box-shadow: 0 0 0 4px rgba(227, 61, 79, .14); }
+.event-list.dense li > span {
+  color: #dbeafe;
+  font-size: 13px;
+  text-align: right;
+}
+.event-list.dense strong {
+  margin-bottom: 3px;
+}
+.event-list.dense small {
+  display: block;
+  max-width: 820px;
 }
 .event-list li > span {
   font-weight: 900;
@@ -1062,6 +1112,12 @@ dialog form {
 .event-list .yellow { border-left: 5px solid var(--yellow); }
 .event-list .red { border-left: 5px solid var(--red); }
 .event-list .sub { border-left: 5px solid var(--blue); }
+.event-list.dense .goal,
+.event-list.dense .yellow,
+.event-list.dense .red,
+.event-list.dense .sub {
+  border-left: 0;
+}
 
 .text-link {
   border: 0;

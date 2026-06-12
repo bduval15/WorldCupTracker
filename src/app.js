@@ -639,7 +639,7 @@ function teamCell(row) {
 function renderMatchDialog(match, summary = null) {
   const stats = summary?.stats && Object.keys(summary.stats).length ? summary.stats : match.stats;
   const timeline = summary?.plays?.length ? summary.plays : match.details;
-  const meaningfulTimeline = timeline.filter((item) => ["goal", "assist", "yellow", "red", "sub"].includes(item.kind) || /shot|foul|corner|penalty|end|start/i.test(item.text)).slice(-80);
+  const meaningfulTimeline = timeline.filter(isTimelineEvent).slice(-80);
   const officials = summary?.officials?.length ? summary.officials.join(", ") : "TBD";
   const espnLink = match.links.Summary || match.links.Report || match.links.Statistics || state.sourceUrl;
 
@@ -706,9 +706,16 @@ function eventList(events, dense = false) {
   return `<ol class="event-list ${dense ? "dense" : ""}">${events.map((event) => `
     <li class="${event.kind}">
       <span>${escapeHtml(event.minute || "")}</span>
-      <div><strong>${escapeHtml(eventLabel(event))}</strong><small>${escapeHtml(event.text || event.team || "")}</small></div>
+      <div><strong>${escapeHtml(eventLabel(event))}</strong><small>${escapeHtml(eventDescription(event))}</small></div>
     </li>
   `).join("")}</ol>`;
+}
+
+function isTimelineEvent(event) {
+  const text = `${event.type || ""} ${event.text || ""}`.toLowerCase();
+  if (/delay|var check|injury break|cooling break/.test(text)) return false;
+  return ["goal", "assist", "yellow", "red", "sub"].includes(event.kind)
+    || /shot|foul|corner|penalty|offside|save|miss|blocked/i.test(text);
 }
 
 function eventLabel(event) {
@@ -718,6 +725,13 @@ function eventLabel(event) {
   if (event.kind === "red") return `Red card ${event.athlete || event.team}`;
   if (event.kind === "sub") return "Substitution";
   return event.type || event.team || "Event";
+}
+
+function eventDescription(event) {
+  const label = eventLabel(event);
+  const text = event.text || event.team || "";
+  if (!text || text === event.type || text === label) return "";
+  return text;
 }
 
 function createSeedMatches() {
