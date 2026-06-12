@@ -490,7 +490,7 @@ input[type="search"]:focus {
 
 .stats-tabs {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   border-bottom: 1px solid var(--line);
   background: rgba(23, 37, 64, .72);
 }

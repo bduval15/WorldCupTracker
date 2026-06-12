@@ -2,7 +2,7 @@ const groupLetters = Object.keys(window.SEED_DATA.groups);
 
 const state = {
   view: "today",
-  statsTab: "goals",
+  statsTab: "playerGoals",
   query: "",
   source: "Bundled fallback",
   sourceUrl: "",
@@ -24,7 +24,8 @@ const viewTitles = {
 };
 
 const statsTabs = [
-  { id: "goals", label: "Goals", icon: "soccer-ball.svg" },
+  { id: "playerGoals", label: "Player Goals", icon: "soccer-ball.svg" },
+  { id: "teamGoals", label: "Team Goals", iconText: "TG" },
   { id: "assists", label: "Assists", iconText: "A" },
   { id: "yellows", label: "Yellows", iconText: "Y" },
   { id: "reds", label: "Reds", iconText: "R" },
@@ -267,9 +268,7 @@ function normalizeDetail(detail, competitors = []) {
   const text = detail.type?.text || detail.play?.type?.text || "";
   const teamId = String(detail.team?.id || detail.play?.team?.id || "");
   const team = competitors.find((item) => String(item.id) === teamId || String(item.team?.id) === teamId)?.team?.displayName || detail.team?.displayName || detail.play?.team?.displayName || "";
-  const athletes = detail.athletesInvolved?.map((item) => item.displayName).filter(Boolean)
-    || detail.play?.participants?.map((item) => item.athlete?.displayName).filter(Boolean)
-    || [];
+  const athletes = extractParticipantNames(detail);
   const athlete = athletes[0] || "";
   const assist = athletes[1] || extractAssistName(detail.text || detail.play?.text || "");
   const lower = text.toLowerCase();
@@ -295,6 +294,12 @@ function mapStats(stats) {
     label: stat.label || stat.displayName || statLabels[stat.name] || stat.abbreviation || stat.name,
     value: stat.displayValue ?? String(stat.value ?? "")
   }]));
+}
+
+function extractParticipantNames(detail) {
+  const groups = [detail.athletesInvolved, detail.participants, detail.play?.participants];
+  const source = groups.find((items) => Array.isArray(items) && items.length) || [];
+  return source.map((item) => item.displayName || item.athlete?.displayName).filter(Boolean);
 }
 
 async function openMatch(match) {
@@ -415,7 +420,7 @@ function renderGroups() {
 }
 
 function renderStats() {
-  const config = statsConfig()[state.statsTab] || statsConfig().goals;
+  const config = statsConfig()[state.statsTab] || statsConfig().playerGoals;
   const items = config.items();
   const wrap = div("stats-view");
   const tabs = div("stats-tabs");
@@ -601,7 +606,8 @@ function leaderList(items, limit = 4) {
 
 function statsConfig() {
   return {
-    goals: { title: "Goals Leaders", valueLabel: "goals", items: rankedScorers },
+    playerGoals: { title: "Player Goals Leaders", valueLabel: "player goals", items: rankedScorers },
+    teamGoals: { title: "Team Goals Leaders", valueLabel: "team goals", items: rankedTeamGoals },
     assists: { title: "Assists Leaders", valueLabel: "assists", items: rankedAssists },
     yellows: { title: "Yellow Card Leaders", valueLabel: "yellow cards", items: () => rankedCardsByKind("yellow") },
     reds: { title: "Red Card Leaders", valueLabel: "red cards", items: () => rankedCardsByKind("red") },
@@ -772,7 +778,7 @@ function rankedScorers() {
   const totals = new Map();
   state.matches.forEach((match) => {
     match.goals.forEach((goal) => {
-      const name = goal.athlete || goal.team || "Unknown scorer";
+      const name = goal.athlete || "Unknown scorer";
       const entry = totals.get(name) || { name, goals: 0, teams: new Set() };
       entry.goals += 1;
       if (goal.team) entry.teams.add(goal.team);
@@ -786,6 +792,31 @@ function rankedScorers() {
       value: String(item.goals),
       team: [...item.teams][0] || "",
       detail: `${item.goals} goal${item.goals === 1 ? "" : "s"}${item.teams.size ? ` / ${[...item.teams][0]}` : ""}`
+    }));
+}
+
+function rankedTeamGoals() {
+  const totals = new Map();
+  state.matches.forEach((match) => {
+    if (match.goals.length) {
+      match.goals.forEach((goal) => {
+        if (!goal.team) return;
+        totals.set(goal.team, (totals.get(goal.team) || 0) + 1);
+      });
+      return;
+    }
+    if (match.completed || match.statusState === "in") {
+      if (Number.isFinite(match.homeScore)) totals.set(match.home, (totals.get(match.home) || 0) + match.homeScore);
+      if (Number.isFinite(match.awayScore)) totals.set(match.away, (totals.get(match.away) || 0) + match.awayScore);
+    }
+  });
+  return [...totals.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([name, goals]) => ({
+      name,
+      value: String(goals),
+      team: name,
+      detail: `${goals} goal${goals === 1 ? "" : "s"}`
     }));
 }
 
