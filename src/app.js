@@ -4,6 +4,7 @@ const state = {
   view: "today",
   statsTab: "playerGoals",
   query: "",
+  matchGroupFilter: "",
   favoriteTeam: localStorage.getItem("favoriteTeam") || "",
   source: "Bundled fallback",
   sourceUrl: "",
@@ -447,6 +448,19 @@ function renderToday() {
 function renderMatches() {
   const wrap = div("match-center");
   const filters = div("filter-row");
+  const groupSelect = document.createElement("select");
+  groupSelect.className = "group-filter";
+  groupSelect.setAttribute("aria-label", "Filter matches by group");
+  groupSelect.innerHTML = [
+    `<option value="">All groups</option>`,
+    ...groupLetters.map((group) => `<option value="${group}">Group ${group}</option>`)
+  ].join("");
+  groupSelect.value = state.matchGroupFilter;
+  groupSelect.addEventListener("change", (event) => {
+    state.matchGroupFilter = event.target.value;
+    render();
+  });
+  filters.append(groupSelect);
   ["All", "Live", "Finished", "Upcoming"].forEach((label) => {
     const chip = document.createElement("button");
     chip.className = "filter-chip";
@@ -459,7 +473,7 @@ function renderMatches() {
     filters.append(chip);
   });
   wrap.append(filters);
-  wrap.append(matchGrid(filterMatches(state.matches), true));
+  wrap.append(matchGrid(filterMatchGroup(filterMatches(state.matches)), true));
   return wrap;
 }
 
@@ -1124,6 +1138,11 @@ function filterMatches(matches) {
   };
   if (statusAlias[state.query]) return matches.filter(statusAlias[state.query]);
   return matches.filter(matchMatchesQuery);
+}
+
+function filterMatchGroup(matches) {
+  if (!state.matchGroupFilter) return matches;
+  return matches.filter((match) => match.group === state.matchGroupFilter);
 }
 
 function matchMatchesQuery(match) {

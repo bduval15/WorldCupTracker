@@ -123,7 +123,7 @@ button, input, select { font: inherit; }
   gap: 6px;
 }
 
-.nav-button, .action-button, .filter-chip {
+.nav-button, .action-button, .filter-chip, .group-filter {
   border: 1px solid var(--line);
   background: linear-gradient(180deg, rgba(21, 39, 55, .98), rgba(10, 22, 31, .98));
   color: var(--ink);
@@ -144,7 +144,7 @@ button, input, select { font: inherit; }
   box-shadow: 0 8px 24px rgba(17, 197, 141, .18), inset 0 1px rgba(255, 255, 255, .08);
 }
 
-.nav-button:hover, .action-button:hover, .filter-chip:hover {
+.nav-button:hover, .action-button:hover, .filter-chip:hover, .group-filter:hover {
   background: var(--panel-hover);
   border-color: rgba(247, 201, 72, .56);
 }
@@ -354,10 +354,23 @@ input[type="search"]:disabled {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  align-items: center;
 }
 .filter-chip {
   padding: 8px 12px;
   font-weight: 750;
+}
+
+.group-filter {
+  min-width: 150px;
+  padding: 8px 34px 8px 12px;
+  font-weight: 800;
+  outline: none;
+}
+
+.group-filter:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(248, 207, 82, .16);
 }
 
 .match-grid {
