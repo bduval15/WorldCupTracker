@@ -407,7 +407,7 @@ function updateFavoriteIdentity() {
   els.brandMark.src = flag || "assets/soccer-ball.svg";
   els.brandMark.classList.toggle("is-flag", Boolean(flag));
   mark?.classList.toggle("is-favorite", Boolean(flag));
-  els.brandSubtitle.textContent = favorite ? `Following ${favorite}` : "2026 Matchday";
+  els.brandSubtitle.textContent = favorite || "2026 Matchday";
   els.favoriteSelect.value = favorite;
 }
 
