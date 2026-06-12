@@ -24,11 +24,11 @@ const viewTitles = {
 };
 
 const searchPlaceholders = {
-  today: "Search home matches by team or group",
-  matches: "Search teams, groups, scores, or status",
-  stats: "Use the stat tabs below",
-  groups: "Group tables are shown below",
-  bracket: "Bracket is ordered by match path"
+  today: "Search teams, groups, matches, scores",
+  matches: "Search teams, groups, dates, scores, status",
+  stats: "Search player names, teams, stats",
+  groups: "Search groups or teams",
+  bracket: "Search teams, rounds, match numbers"
 };
 
 const statsTabs = [
@@ -365,14 +365,9 @@ function render() {
 }
 
 function updateSearchUi() {
-  const searchable = state.view === "today" || state.view === "matches";
   els.search.placeholder = searchPlaceholders[state.view] || "Search teams and matches";
-  els.search.disabled = !searchable;
-  els.search.setAttribute("aria-disabled", String(!searchable));
-  if (!searchable && state.query) {
-    state.query = "";
-    els.search.value = "";
-  }
+  els.search.disabled = false;
+  els.search.removeAttribute("aria-disabled");
 }
 
 function renderSummary() {
@@ -435,13 +430,18 @@ function renderMatches() {
 
 function renderGroups() {
   const grid = div("groups-grid");
-  groupLetters.forEach((group) => grid.append(groupTable(group)));
+  const groups = groupLetters.filter(groupMatchesQuery);
+  if (!groups.length) {
+    grid.innerHTML = `<div class="empty">No groups or teams match the current search.</div>`;
+    return grid;
+  }
+  groups.forEach((group) => grid.append(groupTable(group)));
   return grid;
 }
 
 function renderStats() {
   const config = statsConfig()[state.statsTab] || statsConfig().playerGoals;
-  const items = config.items();
+  const items = filterStatItems(config.items());
   const wrap = div("stats-view");
   const tabs = div("stats-tabs");
   statsTabs.forEach((tab) => {
@@ -470,7 +470,7 @@ function renderStats() {
 
 function renderBracket() {
   const wrap = div("bracket-page");
-  const knockout = state.matches.filter((match) => !match.group);
+  const knockout = state.matches.filter((match) => !match.group && matchMatchesQuery(match));
   const byStage = groupBy(knockout, (match) => match.stage || "Knockout");
   const board = div("bracket-board");
   stageOrder.forEach((stage) => {
@@ -483,7 +483,7 @@ function renderBracket() {
       matches.forEach((match, index) => column.append(bracketMatchCard(match, stage, index)));
     } else {
       const placeholder = div("bracket-placeholder");
-      placeholder.innerHTML = `<span>${fallback?.[2] || "Awaiting qualifiers"}</span>`;
+      placeholder.innerHTML = `<span>${state.query ? "No matching matches" : fallback?.[2] || "Awaiting qualifiers"}</span>`;
       column.append(placeholder);
     }
     board.append(column);
@@ -641,7 +641,10 @@ function statsTabIcon(tab) {
 }
 
 function statsRows(items, config) {
-  if (!items.length) return `<div class="empty small">Waiting for ${escapeHtml(config.valueLabel)} data.</div>`;
+  if (!items.length) {
+    const message = state.query ? "No stats match the current search." : `Waiting for ${escapeHtml(config.valueLabel)} data.`;
+    return `<div class="empty small">${message}</div>`;
+  }
   return `<ol class="stats-list">${items.map((item, index) => `
     <li>
       <span class="stats-rank">${index + 1}</span>
@@ -1008,10 +1011,56 @@ function filterMatches(matches) {
     upcoming: (match) => match.statusState === "pre"
   };
   if (statusAlias[state.query]) return matches.filter(statusAlias[state.query]);
-  return matches.filter((match) => [
-    match.home, match.away, match.group, match.venue, match.city, match.stage, match.status,
-    ...match.goals.map((goal) => goal.athlete), ...match.cards.map((card) => card.athlete)
-  ].join(" ").toLowerCase().includes(state.query));
+  return matches.filter(matchMatchesQuery);
+}
+
+function matchMatchesQuery(match) {
+  if (!state.query) return true;
+  const matchNumber = officialMatchNumber(match);
+  return searchableText([
+    match.home,
+    match.away,
+    match.homeAbbr,
+    match.awayAbbr,
+    match.group,
+    match.group ? `Group ${match.group}` : "",
+    match.stage,
+    match.status,
+    match.venue,
+    match.city,
+    match.country,
+    match.date ? formatMatchDate(match.date) : "",
+    match.time,
+    matchNumber ? `Match ${matchNumber}` : "",
+    scoreText(match),
+    ...match.goals.map((goal) => `${goal.athlete || ""} ${goal.team || ""} goal ${goal.minute || ""}`),
+    ...match.cards.map((card) => `${card.athlete || ""} ${card.team || ""} ${card.kind || ""} card ${card.minute || ""}`)
+  ]).includes(state.query);
+}
+
+function groupMatchesQuery(group) {
+  if (!state.query) return true;
+  return searchableText([
+    group,
+    `Group ${group}`,
+    ...(state.groups[group] || []),
+    ...(state.standings[group] || []).map((row) => row.team)
+  ]).includes(state.query);
+}
+
+function filterStatItems(items) {
+  if (!state.query) return items;
+  return items.filter((item) => searchableText([
+    item.name,
+    item.team,
+    item.meta,
+    item.detail,
+    item.value
+  ]).includes(state.query));
+}
+
+function searchableText(values) {
+  return values.filter(Boolean).join(" ").toLowerCase();
 }
 
 function setLiveStatus(status, detail) {
