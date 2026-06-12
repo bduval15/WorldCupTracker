@@ -38,7 +38,7 @@ Team names, competition names, logos, flags, trademarks, and other sports-relate
 
 The software is provided "as is" without warranty of any kind. See the MIT License for the full license and warranty disclaimer.
 
-## Run From Source
+## Build Your Own Copy
 
 Requirements:
 
@@ -46,25 +46,19 @@ Requirements:
 - Node.js 20 or newer
 - npm
 
-Install dependencies:
+Clone the repository and install dependencies:
 
 ```powershell
+git clone https://github.com/bduval15/WorldCupTracker.git
+cd WorldCupTracker
 npm install
 ```
 
-Run the desktop app:
+Run it from source:
 
 ```powershell
 npm start
 ```
-
-You can also double-click:
-
-```powershell
-Start-WorldCup2026.cmd
-```
-
-## Build Windows App
 
 Build installer and portable `.exe` files:
 
@@ -72,23 +66,28 @@ Build installer and portable `.exe` files:
 npm run dist
 ```
 
-Output:
+The generated files will be in:
 
 ```powershell
 release
 ```
 
-If Windows or OneDrive blocks the project `release` folder during packaging, build directly to your Desktop:
+If Windows or OneDrive blocks the project `release` folder during packaging, build to your Desktop instead:
 
 ```powershell
 npm run dist:desktop
 ```
 
-Output:
+The generated files will be in:
 
 ```powershell
 %USERPROFILE%\Desktop\WorldCup2026LiveRelease
 ```
+
+Use either generated file:
+
+- `World Cup 2026 Live Setup 1.0.0.exe`
+- `World Cup 2026 Live 1.0.0.exe`
 
 Do not commit the generated `.exe` files to the repository. Upload them to GitHub Releases instead.
 
@@ -99,16 +98,6 @@ Run syntax checks before committing or releasing:
 ```powershell
 npm test
 ```
-
-## GitHub Release Checklist
-
-1. Run `npm test`.
-2. Run `npm run dist:desktop`.
-3. Create a new GitHub Release, for example `v1.0.0`.
-4. Upload these files from `%USERPROFILE%\Desktop\WorldCup2026LiveRelease`:
-   - `World Cup 2026 Live Setup 1.0.0.exe`
-   - `World Cup 2026 Live 1.0.0.exe`
-5. Publish the release and send people the release link.
 
 ## Tech Stack
 
