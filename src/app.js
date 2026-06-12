@@ -645,6 +645,7 @@ function renderMatchDialog(match, summary = null) {
     </div>
     <div class="detail-grid">
       ${detailTile("Kickoff", `${formatMatchDate(match.date)} / ${match.time}`)}
+      ${detailTile("Location", matchLocation(match))}
       ${detailTile("Officials", officials)}
     </div>
     ${match.headline ? `<p class="headline">${escapeHtml(match.headline)}</p>` : ""}
@@ -673,6 +674,12 @@ function renderMatchDialog(match, summary = null) {
 
 function detailTile(label, value) {
   return `<article class="detail-tile"><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(value || "TBD"))}</strong></article>`;
+}
+
+function matchLocation(match) {
+  return [match.venue && match.venue !== "TBD" ? match.venue : "", match.city || "", match.country || ""]
+    .filter(Boolean)
+    .join(", ") || "TBD";
 }
 
 function statsTable(match, stats) {
