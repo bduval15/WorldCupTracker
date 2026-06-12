@@ -28,6 +28,8 @@ jobs:
         run: npm test
 
       - name: Build Windows app
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
         run: npm run dist
 
       - name: Upload installer
