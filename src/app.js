@@ -197,6 +197,7 @@ const els = {
   brandSubtitle: document.getElementById("brandSubtitle"),
   favoriteSelect: document.getElementById("favoriteTeamSelect"),
   compactButton: document.getElementById("compactModeButton"),
+  compactNavButton: document.getElementById("compactNavButton"),
   alertKickoff: document.getElementById("kickoffAlerts"),
   alertGoals: document.getElementById("goalAlerts"),
   alertFinal: document.getElementById("finalAlerts"),
@@ -213,8 +214,9 @@ render();
 scheduleNextRefresh(randomMs(INITIAL_REFRESH_MIN_MS, INITIAL_REFRESH_MAX_MS));
 
 document.querySelectorAll(".nav-button").forEach((button) => {
+  if (!button.dataset.view) return;
   button.addEventListener("click", () => {
-    document.querySelectorAll(".nav-button").forEach((item) => item.classList.remove("active"));
+    document.querySelectorAll(".nav-button[data-view]").forEach((item) => item.classList.remove("active"));
     button.classList.add("active");
     state.view = button.dataset.view;
     render();
@@ -236,6 +238,10 @@ els.favoriteSelect.addEventListener("change", (event) => {
 });
 
 els.compactButton.addEventListener("click", () => {
+  applyCompactMode(!state.compactMode);
+});
+
+els.compactNavButton.addEventListener("click", () => {
   applyCompactMode(!state.compactMode);
 });
 
@@ -581,6 +587,7 @@ function initPreferenceControls() {
   els.alertFinal.checked = state.alerts.final;
   els.alertRed.checked = state.alerts.red;
   els.compactButton.setAttribute("aria-pressed", String(state.compactMode));
+  els.compactNavButton.setAttribute("aria-pressed", String(state.compactMode));
   if (Object.values(state.alerts).some(Boolean)) requestNotificationPermission();
 }
 
@@ -609,7 +616,9 @@ function applyCompactMode(enabled) {
   localStorage.setItem("compactMode", String(enabled));
   document.body.classList.toggle("compact-mode", enabled);
   els.compactButton.textContent = enabled ? "Full" : "Compact";
+  els.compactNavButton.textContent = enabled ? "Full" : "Compact";
   els.compactButton.setAttribute("aria-pressed", String(enabled));
+  els.compactNavButton.setAttribute("aria-pressed", String(enabled));
   window.worldCup.setCompactMode?.(enabled);
 }
 

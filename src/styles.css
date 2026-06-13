@@ -148,6 +148,10 @@ button, input, select { font: inherit; }
   font-weight: 750;
 }
 
+.compact-nav-toggle {
+  display: none;
+}
+
 .nav-button.active {
   background: linear-gradient(135deg, var(--team-primary) 0%, var(--team-secondary) 58%, var(--team-third) 100%);
   color: #fff;
@@ -1636,6 +1640,10 @@ body.compact-mode .nav-button {
   font-size: 13px;
 }
 
+body.compact-mode .compact-nav-toggle {
+  display: block;
+}
+
 body.compact-mode .favorite-picker,
 body.compact-mode .sidebar-panel {
   display: none;
@@ -1683,8 +1691,8 @@ body.compact-mode .top-actions {
   flex-direction: column;
 }
 
-body.compact-mode .compact-toggle {
-  order: -1;
+body.compact-mode .top-actions .compact-toggle {
+  display: none;
 }
 
 body.compact-mode h1 {
