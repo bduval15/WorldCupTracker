@@ -26,6 +26,7 @@ const state = {
   statsTab: "playerGoals",
   query: "",
   matchGroupFilter: "",
+  matchStatusFilter: "all",
   favoriteTeam: localStorage.getItem("favoriteTeam") || "",
   compactMode: localStorage.getItem("compactMode") === "true",
   alerts: {
@@ -746,17 +747,19 @@ function renderMatches() {
   filters.append(groupSelect);
   ["All", "Live", "Finished", "Upcoming"].forEach((label) => {
     const chip = document.createElement("button");
-    chip.className = "filter-chip";
+    const filter = label.toLowerCase();
+    chip.className = `filter-chip ${state.matchStatusFilter === filter ? "active" : ""}`;
     chip.textContent = label;
+    chip.type = "button";
+    chip.setAttribute("aria-pressed", String(state.matchStatusFilter === filter));
     chip.addEventListener("click", () => {
-      state.query = label === "All" ? "" : label.toLowerCase();
-      els.search.value = state.query;
+      state.matchStatusFilter = filter;
       render();
     });
     filters.append(chip);
   });
   wrap.append(filters);
-  wrap.append(matchGrid(filterMatchGroup(filterMatches(state.matches)), true));
+  wrap.append(matchGrid(filterMatchGroup(filterMatches(state.matches, true)), true));
   return wrap;
 }
 
@@ -1554,15 +1557,16 @@ function recentResults() {
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 }
 
-function filterMatches(matches) {
-  if (!state.query) return matches;
+function filterMatches(matches, includeStatus = false) {
   const statusAlias = {
     live: (match) => match.statusState === "in",
     finished: (match) => match.completed,
     upcoming: (match) => match.statusState === "pre"
   };
-  if (statusAlias[state.query]) return matches.filter(statusAlias[state.query]);
-  return matches.filter(matchMatchesQuery);
+  const statusFiltered = includeStatus && statusAlias[state.matchStatusFilter]
+    ? matches.filter(statusAlias[state.matchStatusFilter])
+    : matches;
+  return state.query ? statusFiltered.filter(matchMatchesQuery) : statusFiltered;
 }
 
 function filterMatchGroup(matches) {
