@@ -1130,7 +1130,8 @@ function favoriteMatchLabel(match) {
 function favoriteMatchDetail(match) {
   const opponent = match.home === state.favoriteTeam ? match.away : match.home;
   const score = match.completed || match.statusState === "in" ? ` / ${scoreText(match)}` : "";
-  return `${opponent}${score} / ${formatMatchDate(match.date)} ${match.time}`;
+  const time = match.time && match.time !== "TBD" ? `, ${match.time}` : "";
+  return `${opponent}${score} / ${formatMatchDate(match.date)}${time}`;
 }
 
 function favoriteTeamTopScorer() {

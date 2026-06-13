@@ -1504,6 +1504,56 @@ body.compact-mode .favorite-team-details {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+body.compact-mode .favorite-team-card {
+  gap: 10px;
+}
+
+body.compact-mode .favorite-team-head {
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 8px;
+  min-height: 40px;
+}
+
+body.compact-mode .favorite-team-head img,
+body.compact-mode .favorite-team-head .team-code {
+  width: 40px;
+  height: 26px;
+}
+
+body.compact-mode .favorite-team-head img.flag-img {
+  height: 26px;
+}
+
+body.compact-mode .favorite-team-head strong {
+  font-size: 19px;
+}
+
+body.compact-mode .favorite-team-stat-grid {
+  gap: 7px;
+}
+
+body.compact-mode .favorite-team-stat-grid p {
+  min-height: 54px;
+  padding: 8px 6px;
+  align-content: center;
+}
+
+body.compact-mode .favorite-team-stat-grid b {
+  font-size: 15px;
+}
+
+body.compact-mode .favorite-team-details {
+  gap: 6px 8px;
+}
+
+body.compact-mode .favorite-team-details p {
+  padding-top: 7px;
+}
+
+body.compact-mode .favorite-team-details small {
+  line-height: 1.25;
+}
+
 body.compact-mode .stats-list li {
   grid-template-columns: 34px minmax(0, 1fr) 44px;
 }
