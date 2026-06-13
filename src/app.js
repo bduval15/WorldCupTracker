@@ -782,7 +782,7 @@ function matchCard(match, showDetails) {
       <span>${escapeHtml(match.stage)}${match.group ? ` / Group ${match.group}` : ""}</span>
       <strong>${escapeHtml(match.status)}</strong>
     </div>
-    ${badges.length ? `<div class="match-badges">${badges.map((badge) => `<span>${escapeHtml(badge)}</span>`).join("")}</div>` : ""}
+    ${badges.length ? `<div class="match-badges">${badges.map((badge) => `<span class="${badgeClass(badge)}">${escapeHtml(badge)}</span>`).join("")}</div>` : ""}
     <div class="teams">
       ${teamLine(match.home, match.homeLogo, match.homeScore, match.homeAbbr)}
       ${teamLine(match.away, match.awayLogo, match.awayScore, match.awayAbbr)}
@@ -810,6 +810,10 @@ function teamLine(name, logo, score, abbr = "") {
       <span class="team-score">${Number.isFinite(score) ? score : "-"}</span>
     </div>
   `;
+}
+
+function badgeClass(label) {
+  return `match-badge badge-${String(label).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`;
 }
 
 function groupTable(group) {
