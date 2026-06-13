@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell } = require("electron");
+const { app, BrowserWindow, ipcMain, screen, shell } = require("electron");
 const path = require("path");
 
 const ESPN_SCOREBOARD =
@@ -125,11 +125,24 @@ ipcMain.handle("open-external", async (_event, url) => {
 ipcMain.handle("set-compact-mode", async (event, compact) => {
   const window = BrowserWindow.fromWebContents(event.sender);
   if (!window) return;
+  const display = screen.getDisplayMatching(window.getBounds()).workAreaSize;
+
+  if (window.isFullScreen()) window.setFullScreen(false);
+  if (window.isMaximized()) window.unmaximize();
+
   if (compact) {
-    window.setMinimumSize(420, 520);
-    window.setSize(460, 680, true);
+    const width = 460;
+    const height = Math.min(720, display.height);
+    window.setResizable(true);
+    window.setMinimumSize(width, 520);
+    window.setMaximumSize(width, display.height);
+    window.setSize(width, height, true);
+    window.center();
   } else {
+    window.setResizable(true);
     window.setMinimumSize(920, 620);
-    window.setSize(1180, 780, true);
+    window.setMaximumSize(display.width, display.height);
+    window.setSize(Math.min(1180, display.width), Math.min(780, display.height), true);
+    window.center();
   }
 });
