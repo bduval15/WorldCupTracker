@@ -23,9 +23,13 @@ if (process.platform === "win32") {
 }
 
 function createWindow() {
+  const { width: workWidth, height: workHeight } = screen.getPrimaryDisplay().workAreaSize;
+  const initialWidth = Math.max(920, Math.round(workWidth * 0.8));
+  const initialHeight = Math.max(620, Math.round(workHeight * 0.8));
+
   mainWindow = new BrowserWindow({
-    width: 1180,
-    height: 780,
+    width: initialWidth,
+    height: initialHeight,
     minWidth: 920,
     minHeight: 620,
     icon: APP_ICON,
