@@ -424,7 +424,9 @@ function normalizeDetail(detail, competitors = []) {
   const athletes = extractParticipantNames(detail);
   const athlete = athletes[0] || "";
   const assist = athletes[1] || extractAssistName(detail.text || detail.play?.text || "");
-  const lower = text.toLowerCase();
+  const detailText = detail.play?.text || detail.text || [athlete, text].filter(Boolean).join(" - ");
+  const lower = `${text} ${detailText}`.toLowerCase();
+  const ownGoal = /\bown goal\b/.test(lower);
   let kind = "event";
   if (detail.scoringPlay || lower.includes("goal")) kind = "goal";
   if (!detail.scoringPlay && lower.includes("assist")) kind = "assist";
@@ -437,7 +439,8 @@ function normalizeDetail(detail, competitors = []) {
     team,
     athlete,
     assist,
-    text: detail.play?.text || detail.text || [athlete, text].filter(Boolean).join(" - "),
+    ownGoal,
+    text: detailText,
     type: text
   };
 }
@@ -876,7 +879,7 @@ function matchGrid(matches, showDetails) {
 function matchCard(match, showDetails) {
   const card = div(`match-card ${match.statusState === "in" ? "is-live" : ""}`);
   card.tabIndex = 0;
-  const scoring = match.goals.map((goal) => `${goal.minute} ${goal.athlete || goal.team}`).join(", ");
+  const scoring = match.goals.map(goalScoringText).join(", ");
   const badges = matchImportanceBadges(match);
   card.innerHTML = `
     <div class="match-meta">
@@ -911,6 +914,10 @@ function teamLine(name, logo, score, abbr = "") {
       <span class="team-score">${Number.isFinite(score) ? score : "-"}</span>
     </div>
   `;
+}
+
+function goalScoringText(goal) {
+  return `${goal.minute} ${goal.athlete || goal.team}${goal.ownGoal ? " (OG)" : ""}`;
 }
 
 function badgeClass(label) {
@@ -1153,7 +1160,7 @@ function eventMinuteValue(event) {
 }
 
 function eventLabel(event) {
-  if (event.kind === "goal") return `Goal ${event.athlete || event.team}`;
+  if (event.kind === "goal") return event.ownGoal ? `Own goal ${event.athlete || event.team}` : `Goal ${event.athlete || event.team}`;
   if (event.kind === "assist") return `Assist ${event.athlete || event.team}`;
   if (event.kind === "yellow") return `Yellow card ${event.athlete || event.team}`;
   if (event.kind === "red") return `Red card ${event.athlete || event.team}`;
@@ -1277,7 +1284,7 @@ function favoriteTeamTopScorer() {
   if (!state.favoriteTeam) return null;
   const totals = new Map();
   state.matches.forEach((match) => {
-    match.goals.filter((goal) => goal.team === state.favoriteTeam).forEach((goal) => {
+    match.goals.filter((goal) => goal.team === state.favoriteTeam && !goal.ownGoal).forEach((goal) => {
       const name = goal.athlete || "Unknown scorer";
       totals.set(name, (totals.get(name) || 0) + 1);
     });
@@ -1360,7 +1367,7 @@ function notifyOnce(shouldNotify, key, title, body) {
 function rankedScorers() {
   const totals = new Map();
   state.matches.forEach((match) => {
-    match.goals.forEach((goal) => {
+    match.goals.filter((goal) => !goal.ownGoal).forEach((goal) => {
       const name = goal.athlete || "Unknown scorer";
       const entry = totals.get(name) || { name, goals: 0, teams: new Set() };
       entry.goals += 1;
@@ -1406,7 +1413,7 @@ function rankedTeamGoals() {
 function rankedAssists() {
   const totals = new Map();
   state.matches.forEach((match) => {
-    match.goals.forEach((goal) => {
+    match.goals.filter((goal) => !goal.ownGoal).forEach((goal) => {
       if (goal.assist) addPlayerTotal(totals, goal.assist, goal.team, "assists");
     });
   });
