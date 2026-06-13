@@ -865,7 +865,7 @@ function favoriteTeamPanel() {
         <strong>${escapeHtml(state.favoriteTeam)}</strong>
       </div>
       <div class="favorite-team-stat-grid">
-        <p><b>${escapeHtml(record)}</b><small>W-D-L</small></p>
+        <p class="record-stat"><b>${escapeHtml(record)}</b><small>Record</small></p>
         <p><b>${standing?.pts ?? 0}</b><small>Pts</small></p>
         <p><b>${standing?.gf ?? 0}</b><small>GF</small></p>
         <p><b>${standing?.ga ?? 0}</b><small>GA</small></p>
