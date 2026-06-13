@@ -284,6 +284,32 @@ button, input, select { font: inherit; }
   line-height: 1.35;
 }
 
+.sidebar-live-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.sidebar-live-stats span {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  padding: 6px 7px;
+  border-radius: 8px;
+  background: rgba(6, 17, 29, .34);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.sidebar-live-stats b {
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+}
+
 .match-alerts {
   margin-top: auto;
 }

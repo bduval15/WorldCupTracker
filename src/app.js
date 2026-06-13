@@ -555,10 +555,34 @@ function renderSidebarLiveMatch() {
     <span class="sidebar-live-label">${isLive ? "Live" : "Next"}</span>
     <strong>${escapeHtml(match.homeAbbr || codeForTeam(match.home))} ${scoreText(match)} ${escapeHtml(match.awayAbbr || codeForTeam(match.away))}</strong>
     <small>${escapeHtml(isLive ? match.status : `${formatMatchDate(match.date)} ${match.time}`)}${liveMatches.length > 1 ? ` / ${liveMatches.length} live` : ""}</small>
+    ${isLive || match.completed ? sidebarLiveStats(match) : ""}
   `;
   els.sidebarLiveMatch.tabIndex = 0;
   els.sidebarLiveMatch.onclick = () => openMatch(match);
   els.sidebarLiveMatch.onkeydown = (event) => { if (event.key === "Enter") openMatch(match); };
+}
+
+function sidebarLiveStats(match) {
+  const yellow = match.cards.filter((card) => card.kind === "yellow").length || sidebarMatchStat(match, "yellowCards");
+  const red = match.cards.filter((card) => card.kind === "red").length || sidebarMatchStat(match, "redCards");
+  const shots = sidebarMatchStat(match, "totalShots");
+  const items = [
+    [`${match.goals.length}`, "goals"],
+    [`${yellow}`, "yellow"],
+    [`${red}`, "red"]
+  ];
+  if (shots) items.push([String(shots), "shots"]);
+  return `<div class="sidebar-live-stats">${items.map(([value, label]) => `
+    <span><b>${escapeHtml(value)}</b>${escapeHtml(label)}</span>
+  `).join("")}</div>`;
+}
+
+function sidebarMatchStat(match, key) {
+  return [match.home, match.away].reduce((total, team) => {
+    const raw = match.stats[team]?.[key]?.value;
+    const value = Number.parseFloat(String(raw ?? "").replace("%", ""));
+    return total + (Number.isFinite(value) ? value : 0);
+  }, 0);
 }
 
 function updateSearchUi() {
