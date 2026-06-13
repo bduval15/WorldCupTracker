@@ -1,4 +1,5 @@
 const { app, BrowserWindow, Notification, ipcMain, screen, shell } = require("electron");
+const fs = require("fs");
 const path = require("path");
 
 const ESPN_SCOREBOARD =
@@ -6,8 +7,10 @@ const ESPN_SCOREBOARD =
 const ESPN_SUMMARY =
   "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary?event=";
 const ESPN_SOURCE = "https://www.espn.com/soccer/scoreboard/_/league/fifa.world";
-const LIVE_SCOREBOARD = process.env.WORLD_CUP_SCOREBOARD_URL || ESPN_SCOREBOARD;
-const LIVE_SUMMARY = process.env.WORLD_CUP_SUMMARY_URL || ESPN_SUMMARY;
+const LIVE_FEED_CONFIG = readLiveFeedConfig();
+const LIVE_FEED_BASE = cleanBaseUrl(process.env.WORLD_CUP_FEED_BASE || LIVE_FEED_CONFIG.baseUrl);
+const LIVE_SCOREBOARD = process.env.WORLD_CUP_SCOREBOARD_URL || LIVE_FEED_CONFIG.scoreboardUrl || feedUrl("/scoreboard") || ESPN_SCOREBOARD;
+const LIVE_SUMMARY = process.env.WORLD_CUP_SUMMARY_URL || LIVE_FEED_CONFIG.summaryUrl || feedUrl("/summary?event=") || ESPN_SUMMARY;
 const SCOREBOARD_CACHE_MS = 15_000;
 const SUMMARY_CACHE_MS = 45_000;
 const APP_ICON = path.join(__dirname, "src", "assets", "soccer-ball.png");
@@ -55,6 +58,23 @@ app.whenReady().then(() => {
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
 });
+
+function readLiveFeedConfig() {
+  try {
+    const configPath = path.join(__dirname, "src", "config", "live-feed.json");
+    return JSON.parse(fs.readFileSync(configPath, "utf8"));
+  } catch {
+    return {};
+  }
+}
+
+function cleanBaseUrl(value = "") {
+  return String(value || "").trim().replace(/\/+$/, "");
+}
+
+function feedUrl(pathname) {
+  return LIVE_FEED_BASE ? `${LIVE_FEED_BASE}${pathname}` : "";
+}
 
 async function fetchJson(url) {
   const response = await fetch(url, {
