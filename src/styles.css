@@ -664,8 +664,38 @@ input[type="search"]:disabled {
   white-space: nowrap;
 }
 
+.favorite-team-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.favorite-team-stat-grid p {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 9px 8px;
+  border: 1px solid rgba(142, 164, 191, .14);
+  border-radius: 8px;
+  background: rgba(6, 17, 29, .36);
+  text-align: center;
+}
+
+.favorite-team-stat-grid b {
+  color: #fff;
+  font-size: 16px;
+}
+
+.favorite-team-stat-grid small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
 .favorite-team-details {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -1468,6 +1498,11 @@ body.compact-mode .group-leaders-card .leader-list {
   grid-template-rows: none;
 }
 
+body.compact-mode .favorite-team-stat-grid,
+body.compact-mode .favorite-team-details {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 body.compact-mode .stats-list li {
   grid-template-columns: 34px minmax(0, 1fr) 44px;
 }
@@ -1515,6 +1550,7 @@ body.compact-mode .stats-tab span {
 @media (max-width: 640px) {
   .content { padding: 24px 14px; }
   .summary-grid, .detail-grid, .dialog-columns, .pulse-panel { grid-template-columns: 1fr; }
+  .favorite-team-stat-grid, .favorite-team-details { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .group-leaders-card .leader-list { grid-template-columns: 1fr; }
   .match-grid, .groups-grid { grid-template-columns: 1fr; }
   .stats-tab { justify-content: flex-start; }

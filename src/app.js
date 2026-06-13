@@ -854,6 +854,9 @@ function favoriteTeamPanel() {
   const standing = favoriteTeamStanding();
   const scorer = favoriteTeamTopScorer();
   const cardWatch = favoriteTeamCardWatch();
+  const record = standing ? `${standing.wins}-${standing.draws}-${standing.losses}` : "0-0-0";
+  const remaining = matches.filter((match) => !match.completed).length;
+  const latestText = latest ? `${latest.home} ${scoreText(latest)} ${latest.away}` : "No result yet";
   return `
     <article class="favorite-team-card">
       <span>Following</span>
@@ -861,9 +864,17 @@ function favoriteTeamPanel() {
         ${teamBadge(state.favoriteTeam)}
         <strong>${escapeHtml(state.favoriteTeam)}</strong>
       </div>
+      <div class="favorite-team-stat-grid">
+        <p><b>${escapeHtml(record)}</b><small>W-D-L</small></p>
+        <p><b>${standing?.pts ?? 0}</b><small>Pts</small></p>
+        <p><b>${standing?.gf ?? 0}</b><small>GF</small></p>
+        <p><b>${standing?.ga ?? 0}</b><small>GA</small></p>
+      </div>
       <div class="favorite-team-details">
         <p><b>${feature ? favoriteMatchLabel(feature) : "Schedule pending"}</b><small>${feature ? favoriteMatchDetail(feature) : "Waiting for match data"}</small></p>
-        <p><b>${standing ? `Group ${standing.group}` : "Group"}</b><small>${standing ? `${standing.pts} pts / GD ${standing.gd > 0 ? `+${standing.gd}` : standing.gd}` : "Not available yet"}</small></p>
+        <p><b>${standing ? `Group ${standing.group}` : "Group"}</b><small>${standing ? `${standing.played} played / GD ${standing.gd > 0 ? `+${standing.gd}` : standing.gd}` : "Not available yet"}</small></p>
+        <p><b>Latest</b><small>${escapeHtml(latestText)}</small></p>
+        <p><b>Remaining</b><small>${remaining} match${remaining === 1 ? "" : "es"}</small></p>
         <p><b>Top scorer</b><small>${escapeHtml(scorer ? `${scorer.name} / ${scorer.goals}` : "No goals yet")}</small></p>
         <p><b>Card watch</b><small>${escapeHtml(cardWatch ? `${cardWatch.name} / ${cardWatch.detail}` : "No cards yet")}</small></p>
       </div>
