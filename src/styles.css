@@ -1343,7 +1343,20 @@ dialog form {
   margin-bottom: 16px;
 }
 .dialog-header h2 {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 10px;
   font-size: 30px;
+  line-height: 1.12;
+}
+
+.dialog-actions {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .dialog-link {
@@ -1357,18 +1370,27 @@ dialog form {
   white-space: nowrap;
 }
 
+.dialog-link:disabled {
+  cursor: wait;
+  opacity: .68;
+}
+
 .dialog-link:hover,
 .dialog-link:focus {
   border-color: var(--gold);
   background: rgba(248, 207, 82, .16);
 }
 
-.status-pill {
-  justify-self: start;
-  padding: 5px 10px;
+.match-clock {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 4px 10px;
+  border: 1px solid rgba(17, 197, 141, .32);
   border-radius: 8px;
-  background: rgba(12, 122, 93, .12);
+  background: rgba(12, 122, 93, .14);
   color: var(--green);
+  font-size: 15px;
   font-weight: 850;
 }
 
@@ -1530,6 +1552,10 @@ dialog form {
 @media (max-width: 720px) {
   .dialog-header {
     grid-template-columns: 1fr;
+  }
+
+  .dialog-actions {
+    justify-content: start;
   }
 
   .dialog-link {

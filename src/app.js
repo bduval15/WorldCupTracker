@@ -464,6 +464,29 @@ async function openMatch(match) {
   }
 }
 
+async function refreshSelectedMatch(button) {
+  if (!state.selectedMatch?.id) return;
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Updating...";
+  }
+  const matchId = state.selectedMatch.id;
+  try {
+    await refreshLive({ force: true });
+    const latestMatch = state.matches.find((match) => match.id === matchId) || state.selectedMatch;
+    state.selectedMatch = latestMatch;
+    if (window.worldCup.fetchMatchSummary) {
+      const payload = await window.worldCup.fetchMatchSummary(matchId, { force: true });
+      summaryFetchedAt.set(matchId, Date.now());
+      state.selectedSummary = normalizeSummary(payload.data);
+    }
+    renderMatchDialog(state.selectedMatch, state.selectedSummary);
+  } catch (error) {
+    state.selectedSummary = { error: error.message };
+    renderMatchDialog(state.selectedMatch, state.selectedSummary);
+  }
+}
+
 function normalizeSummary(summary) {
   const teams = summary.boxscore?.teams || [];
   const competitors = summary.header?.competitions?.[0]?.competitors || [];
@@ -947,10 +970,12 @@ function renderMatchDialog(match, summary = null) {
     <div class="dialog-header">
       <div>
         <p class="eyebrow">${escapeHtml(match.stage)}${match.group ? ` / Group ${match.group}` : ""}</p>
-        <h2>${escapeHtml(match.home)} ${scoreText(match)} ${escapeHtml(match.away)}</h2>
-        <span class="status-pill">${escapeHtml(match.status)}</span>
+        <h2>${escapeHtml(match.home)} ${scoreText(match)} ${escapeHtml(match.away)} <span class="match-clock">${escapeHtml(matchHeaderStatus(match))}</span></h2>
       </div>
-      <button class="dialog-link" data-url="${escapeHtml(espnLink)}">ESPN Match Page</button>
+      <div class="dialog-actions">
+        <button class="dialog-link dialog-update" type="button">Update</button>
+        <button class="dialog-link" type="button" data-url="${escapeHtml(espnLink)}">ESPN Match Page</button>
+      </div>
     </div>
     <div class="detail-grid">
       ${detailTile("Kickoff", `${formatMatchDate(match.date)} / ${match.time}`)}
@@ -975,13 +1000,22 @@ function renderMatchDialog(match, summary = null) {
     </section>
   `;
 
-  els.dialogBody.querySelector(".dialog-link")?.addEventListener("click", (event) => {
+  els.dialogBody.querySelector(".dialog-link[data-url]")?.addEventListener("click", (event) => {
     window.worldCup.openExternal(event.currentTarget.dataset.url);
+  });
+  els.dialogBody.querySelector(".dialog-update")?.addEventListener("click", (event) => {
+    refreshSelectedMatch(event.currentTarget);
   });
 }
 
 function detailTile(label, value) {
   return `<article class="detail-tile"><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(value || "TBD"))}</strong></article>`;
+}
+
+function matchHeaderStatus(match) {
+  if (match.statusState === "in") return match.status;
+  if (match.completed) return "FT";
+  return `${formatMatchDate(match.date)} ${match.time}`;
 }
 
 function matchLocation(match) {
