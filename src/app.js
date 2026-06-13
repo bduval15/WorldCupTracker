@@ -1143,7 +1143,7 @@ function favoriteMatchDetail(match) {
     ? `${formatMatchDate(match.date)} ${match.time}`
     : formatMatchDate(match.date);
   return `
-    <span class="favorite-opponent">${teamBadge(opponent)}${escapeHtml(opponent)}${escapeHtml(score)}</span>
+    <span class="favorite-opponent">${escapeHtml(opponent)}${escapeHtml(score)}${teamBadge(opponent)}</span>
     <span>${escapeHtml(kickoff)}</span>
   `;
 }
