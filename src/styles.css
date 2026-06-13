@@ -626,8 +626,9 @@ input[type="search"]:disabled {
 }
 
 .favorite-team-card {
-  align-content: start;
-  grid-template-rows: auto auto 1fr;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   position: relative;
   overflow: hidden;
 }
@@ -642,9 +643,8 @@ input[type="search"]:disabled {
 
 .favorite-team-main {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.35fr);
-  align-items: center;
-  gap: 12px;
+  grid-template-columns: 1fr;
+  gap: 10px;
 }
 
 .favorite-team-head {
@@ -676,8 +676,8 @@ input[type="search"]:disabled {
 
 .favorite-team-stat-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 7px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
   min-width: 0;
 }
 
@@ -685,7 +685,9 @@ input[type="search"]:disabled {
   display: grid;
   gap: 2px;
   margin: 0;
-  padding: 8px 6px;
+  min-height: 54px;
+  padding: 8px;
+  align-content: center;
   border: 1px solid rgba(142, 164, 191, .14);
   border-radius: 8px;
   background: rgba(6, 17, 29, .36);
