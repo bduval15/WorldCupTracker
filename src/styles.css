@@ -729,6 +729,10 @@ input[type="search"]:disabled {
   color: var(--muted);
 }
 
+.favorite-team-details small span {
+  display: block;
+}
+
 .group-leaders-card {
   grid-column: span 2;
 }

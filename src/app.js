@@ -1135,7 +1135,7 @@ function favoriteMatchDetail(match) {
   const opponent = match.home === state.favoriteTeam ? match.away : match.home;
   const score = match.completed || match.statusState === "in" ? ` / ${scoreText(match)}` : "";
   const time = match.time && match.time !== "TBD" ? `, ${match.time}` : "";
-  return `${opponent}${score} / ${formatMatchDate(match.date)}${time}`;
+  return `${escapeHtml(opponent)}${escapeHtml(score)} / ${escapeHtml(formatMatchDate(match.date))}${time ? `<span>${escapeHtml(match.time)}</span>` : ""}`;
 }
 
 function favoriteTeamTopScorer() {
