@@ -281,6 +281,7 @@ async function refreshLive(options = {}) {
   refreshInFlight = true;
   setLiveStatus("Syncing", "ESPN live");
   try {
+    const previousMatches = new Map(state.matches.filter((match) => match.id).map((match) => [match.id, match]));
     const payload = await window.worldCup.fetchLive({ force: Boolean(options.force) });
     const parsed = parseEspnScoreboard(payload.data);
     if (parsed.matches.length) {
@@ -293,7 +294,7 @@ async function refreshLive(options = {}) {
       state.liveError = null;
       recalculateStandings(false);
       initFavoriteSelect();
-      maybeNotifyMatchEvents(parsed.matches);
+      maybeNotifyMatchEvents(parsed.matches, previousMatches);
       setLiveStatus(payload.fromCache ? "Cached" : "Live", formatDateTime(payload.fetchedAt));
     } else {
       throw new Error("ESPN returned no World Cup events.");
@@ -565,12 +566,17 @@ function requestNotificationPermission() {
 }
 
 function showLocalNotification(title, body) {
-  if (!("Notification" in window) || Notification.permission !== "granted") return;
-  new Notification(title, {
-    body,
-    icon: "assets/soccer-ball.png",
-    silent: false
-  });
+  if (window.worldCup?.showNotification) {
+    window.worldCup.showNotification({ title, body }).catch(() => {});
+    return;
+  }
+  if ("Notification" in window && Notification.permission === "granted") {
+    new Notification(title, {
+      body,
+      icon: "assets/soccer-ball.png",
+      silent: false
+    });
+  }
 }
 
 function rememberNotification(key) {
@@ -1187,21 +1193,35 @@ function matchImportanceBadges(match) {
   return [...new Set(badges)].slice(0, 3);
 }
 
-function maybeNotifyMatchEvents(matches) {
+function maybeNotifyMatchEvents(matches, previousMatches = new Map()) {
   if (!notificationsReady) {
+    baselineExistingNotificationEvents(matches);
     notificationsReady = true;
-    return;
   }
   if (!Object.values(state.alerts).some(Boolean)) return;
   matches.forEach((match) => {
     const title = `${match.home} vs ${match.away}`;
-    notifyOnce(state.alerts.kickoff && match.statusState === "in", `kickoff:${match.id}`, "Match is live", title);
+    const previous = previousMatches.get(match.id);
+    const justWentLive = match.statusState === "in" && previous?.statusState !== "in";
+    notifyOnce(state.alerts.kickoff && justWentLive, `kickoff:${match.id}`, "Match is live", title);
     notifyOnce(state.alerts.final && match.completed, `final:${match.id}`, "Final score", `${match.home} ${scoreText(match)} ${match.away}`);
     match.goals.forEach((goal, index) => {
       notifyOnce(state.alerts.goals, `goal:${match.id}:${goal.minute}:${goal.athlete || goal.team || index}`, `Goal ${goal.team || ""}`.trim(), `${goal.minute || ""} ${goal.athlete || title}`.trim());
     });
     match.cards.filter((card) => card.kind === "red").forEach((card, index) => {
       notifyOnce(state.alerts.red, `red:${match.id}:${card.minute}:${card.athlete || card.team || index}`, `Red card ${card.team || ""}`.trim(), `${card.minute || ""} ${card.athlete || title}`.trim());
+    });
+  });
+}
+
+function baselineExistingNotificationEvents(matches) {
+  matches.forEach((match) => {
+    if (match.completed) rememberNotification(`final:${match.id}`);
+    match.goals.forEach((goal, index) => {
+      rememberNotification(`goal:${match.id}:${goal.minute}:${goal.athlete || goal.team || index}`);
+    });
+    match.cards.filter((card) => card.kind === "red").forEach((card, index) => {
+      rememberNotification(`red:${match.id}:${card.minute}:${card.athlete || card.team || index}`);
     });
   });
 }
