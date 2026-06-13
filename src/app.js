@@ -63,11 +63,11 @@ const searchPlaceholders = {
 
 const statsTabs = [
   { id: "playerGoals", label: "Player Goals", icon: "soccer-ball.svg" },
-  { id: "teamGoals", label: "Team Goals", iconText: "TG" },
-  { id: "assists", label: "Assists", iconText: "A" },
-  { id: "yellows", label: "Yellows", iconText: "Y" },
-  { id: "reds", label: "Reds", iconText: "R" },
-  { id: "teams", label: "Teams", iconText: "T" }
+  { id: "teamGoals", label: "Team Goals", icon: "team-goals.svg" },
+  { id: "assists", label: "Assists", icon: "assist.svg" },
+  { id: "yellows", label: "Yellows", icon: "yellow-card.svg" },
+  { id: "reds", label: "Reds", icon: "red-card.svg" },
+  { id: "teams", label: "Teams", icon: "teams.svg" }
 ];
 
 const stageOrder = [
@@ -293,7 +293,7 @@ async function refreshLive(options = {}) {
       state.liveError = null;
       recalculateStandings(false);
       initFavoriteSelect();
-      maybeNotifyFavoriteEvents(parsed.matches);
+      maybeNotifyMatchEvents(parsed.matches);
       setLiveStatus(payload.fromCache ? "Cached" : "Live", formatDateTime(payload.fetchedAt));
     } else {
       throw new Error("ESPN returned no World Cup events.");
@@ -771,6 +771,7 @@ function matchCard(match, showDetails) {
   card.tabIndex = 0;
   const scoring = match.goals.map((goal) => `${goal.minute} ${goal.athlete || goal.team}`).join(", ");
   const badges = matchImportanceBadges(match);
+  const hasReportedStats = match.statusState !== "pre" || match.goals.length || match.cards.length;
   card.innerHTML = `
     <div class="match-meta">
       <span>${escapeHtml(match.stage)}${match.group ? ` / Group ${match.group}` : ""}</span>
@@ -784,7 +785,7 @@ function matchCard(match, showDetails) {
     <div class="match-footer">
       <span>${formatMatchDate(match.date)} / ${escapeHtml(match.time)}</span>
     </div>
-    ${showDetails ? `<div class="quick-stats">
+    ${showDetails && hasReportedStats ? `<div class="quick-stats">
       <span>${match.goals.length} goals</span>
       <span>${match.cards.filter((card) => card.kind === "yellow").length} yellow</span>
       <span>${match.cards.filter((card) => card.kind === "red").length} red</span>
@@ -1165,25 +1166,23 @@ function matchImportanceBadges(match) {
   return [...new Set(badges)].slice(0, 3);
 }
 
-function maybeNotifyFavoriteEvents(matches) {
+function maybeNotifyMatchEvents(matches) {
   if (!notificationsReady) {
     notificationsReady = true;
     return;
   }
-  if (!state.favoriteTeam || !Object.values(state.alerts).some(Boolean)) return;
-  matches
-    .filter((match) => match.home === state.favoriteTeam || match.away === state.favoriteTeam)
-    .forEach((match) => {
-      const opponent = match.home === state.favoriteTeam ? match.away : match.home;
-      notifyOnce(state.alerts.kickoff && match.statusState === "in", `kickoff:${match.id}`, `${state.favoriteTeam} is live`, `${state.favoriteTeam} vs ${opponent} has kicked off.`);
-      notifyOnce(state.alerts.final && match.completed, `final:${match.id}`, `${state.favoriteTeam} final`, `${match.home} ${scoreText(match)} ${match.away}`);
-      match.goals.filter((goal) => goal.team === state.favoriteTeam).forEach((goal, index) => {
-        notifyOnce(state.alerts.goals, `goal:${match.id}:${goal.minute}:${goal.athlete || index}`, `${state.favoriteTeam} goal`, `${goal.minute || ""} ${goal.athlete || state.favoriteTeam}`.trim());
-      });
-      match.cards.filter((card) => card.kind === "red" && card.team === state.favoriteTeam).forEach((card, index) => {
-        notifyOnce(state.alerts.red, `red:${match.id}:${card.minute}:${card.athlete || index}`, `${state.favoriteTeam} red card`, `${card.minute || ""} ${card.athlete || state.favoriteTeam}`.trim());
-      });
+  if (!Object.values(state.alerts).some(Boolean)) return;
+  matches.forEach((match) => {
+    const title = `${match.home} vs ${match.away}`;
+    notifyOnce(state.alerts.kickoff && match.statusState === "in", `kickoff:${match.id}`, "Match is live", title);
+    notifyOnce(state.alerts.final && match.completed, `final:${match.id}`, "Final score", `${match.home} ${scoreText(match)} ${match.away}`);
+    match.goals.forEach((goal, index) => {
+      notifyOnce(state.alerts.goals, `goal:${match.id}:${goal.minute}:${goal.athlete || goal.team || index}`, `Goal ${goal.team || ""}`.trim(), `${goal.minute || ""} ${goal.athlete || title}`.trim());
     });
+    match.cards.filter((card) => card.kind === "red").forEach((card, index) => {
+      notifyOnce(state.alerts.red, `red:${match.id}:${card.minute}:${card.athlete || card.team || index}`, `Red card ${card.team || ""}`.trim(), `${card.minute || ""} ${card.athlete || title}`.trim());
+    });
+  });
 }
 
 function notifyOnce(shouldNotify, key, title, body) {
