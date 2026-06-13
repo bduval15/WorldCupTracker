@@ -603,14 +603,20 @@ input[type="search"]:disabled {
 }
 
 .match-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   max-width: 100%;
+  min-width: 48px;
+  min-height: 24px;
   overflow: hidden;
-  padding: 4px 9px;
+  padding: 3px 10px;
   border: 1px solid rgba(248, 207, 82, .28);
   border-radius: 999px;
   background: rgba(248, 207, 82, .08);
   color: var(--ink);
   font-size: 11px;
+  line-height: 1;
   font-weight: 850;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -631,7 +637,6 @@ input[type="search"]:disabled {
   border-radius: 50%;
   background: var(--green);
   box-shadow: 0 0 0 3px rgba(17, 197, 141, .12);
-  vertical-align: 1px;
 }
 
 .match-badge.badge-final {
