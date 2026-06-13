@@ -556,6 +556,7 @@ function renderSidebarLiveMatch() {
     <strong>${escapeHtml(match.homeAbbr || codeForTeam(match.home))} ${scoreText(match)} ${escapeHtml(match.awayAbbr || codeForTeam(match.away))}</strong>
     <small>${escapeHtml(isLive ? match.status : `${formatMatchDate(match.date)} ${match.time}`)}${liveMatches.length > 1 ? ` / ${liveMatches.length} live` : ""}</small>
     ${isLive || match.completed ? sidebarLiveStats(match) : ""}
+    ${isLive || match.completed ? sidebarLiveEvents(match) : ""}
   `;
   els.sidebarLiveMatch.tabIndex = 0;
   els.sidebarLiveMatch.onclick = () => openMatch(match);
@@ -583,6 +584,20 @@ function sidebarMatchStat(match, key) {
     const value = Number.parseFloat(String(raw ?? "").replace("%", ""));
     return total + (Number.isFinite(value) ? value : 0);
   }, 0);
+}
+
+function sidebarLiveEvents(match) {
+  const events = uniqueEvents(match.goals.concat(match.cards, match.details || []))
+    .filter(isTimelineEvent)
+    .sort((a, b) => sortEventsByMinute(b, a))
+    .slice(0, 5);
+  if (!events.length) return "";
+  return `<ol class="sidebar-live-events">${events.map((event) => `
+    <li class="${escapeHtml(event.kind)}">
+      <span>${escapeHtml(event.minute || "")}</span>
+      <strong>${escapeHtml(eventLabel(event))}</strong>
+    </li>
+  `).join("")}</ol>`;
 }
 
 function updateSearchUi() {

@@ -310,6 +310,45 @@ button, input, select { font: inherit; }
   line-height: 1;
 }
 
+.sidebar-live-events {
+  display: grid;
+  gap: 5px;
+  margin: 6px 0 0;
+  padding: 7px 0 0;
+  border-top: 1px solid rgba(142, 164, 191, .16);
+  list-style: none;
+}
+
+.sidebar-live-events li {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.sidebar-live-events li span {
+  color: var(--green);
+  font-weight: 900;
+}
+
+.sidebar-live-events li strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 11px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-live-events li.goal span { color: var(--green); }
+.sidebar-live-events li.yellow span { color: var(--yellow); }
+.sidebar-live-events li.red span { color: var(--red); }
+.sidebar-live-events li.sub span { color: var(--blue); }
+
 .match-alerts {
   margin-top: auto;
 }
