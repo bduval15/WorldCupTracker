@@ -130,7 +130,7 @@ const teamCodes = {
   Netherlands: "NED", "New Zealand": "NZL", Norway: "NOR", Panama: "PAN", Paraguay: "PAR",
   Portugal: "POR", Qatar: "QAT", "Saudi Arabia": "KSA", Scotland: "SCO", Senegal: "SEN",
   "South Africa": "RSA", "South Korea": "KOR", Spain: "ESP", Sweden: "SWE", Switzerland: "SUI",
-  Tunisia: "TUN", Turkey: "TUR", "Turkiye": "TUR", "United States": "USA", Uruguay: "URU",
+  Tunisia: "TUN", Turkey: "TUR", "Turkiye": "TUR", "Türkiye": "TUR", "United States": "USA", Uruguay: "URU",
   Uzbekistan: "UZB"
 };
 
@@ -144,7 +144,7 @@ const teamFlagCodes = {
   Morocco: "ma", Netherlands: "nl", "New Zealand": "nz", Norway: "no", Panama: "pa",
   Paraguay: "py", Portugal: "pt", Qatar: "qa", "Saudi Arabia": "sa", Scotland: "gb-sct",
   Senegal: "sn", "South Africa": "za", "South Korea": "kr", Spain: "es", Sweden: "se",
-  Switzerland: "ch", Tunisia: "tn", Turkey: "tr", "Turkiye": "tr", "United States": "us",
+  Switzerland: "ch", Tunisia: "tn", Turkey: "tr", "Turkiye": "tr", "Türkiye": "tr", "United States": "us",
   Uruguay: "uy", Uzbekistan: "uz"
 };
 
