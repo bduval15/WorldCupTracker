@@ -350,11 +350,11 @@ button, input, select { font: inherit; }
 .sidebar-live-events li.sub span { color: var(--blue); }
 
 .match-alerts {
-  margin-top: auto;
+  margin-top: 0;
 }
 
 .live-card {
-  margin-top: auto;
+  margin-top: 0;
   display: grid;
   grid-template-columns: 14px 1fr;
   align-items: center;
@@ -364,10 +364,6 @@ button, input, select { font: inherit; }
   background: linear-gradient(180deg, rgba(21, 45, 36, .92), rgba(17, 32, 48, .92));
   border-radius: 8px;
   min-height: 58px;
-}
-
-.match-alerts + .live-card {
-  margin-top: 0;
 }
 
 .live-card strong, .live-card span {
