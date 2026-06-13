@@ -391,19 +391,9 @@ function normalizeDetail(detail, competitors = []) {
   const athlete = athletes[0] || "";
   const assist = athletes[1] || extractAssistName(detail.text || detail.play?.text || "");
   const detailText = detail.play?.text || detail.text || [athlete, text].filter(Boolean).join(" - ");
-  const lower = `${text} ${detailText}`.toLowerCase();
   const typeLower = text.toLowerCase();
-  const ownGoal = /\bown goal\b/.test(lower);
-  let kind = "event";
-  if (detail.scoringPlay || /\b(own goal|goal)\b/.test(typeLower)) kind = "goal";
-  if (detail.yellowCard || lower.includes("yellow")) kind = "yellow";
-  if (detail.redCard || lower.includes("red card")) kind = "red";
-  if (lower.includes("substitution")) kind = "sub";
-  if (kind === "event" && /\battempt saved\b|\bsaved\b/.test(lower)) kind = "save";
-  if (kind === "event" && /\bshot on target\b/.test(lower)) kind = "shotOn";
-  if (kind === "event" && /\bshot off target\b|\battempt missed\b/.test(lower)) kind = "shotOff";
-  if (kind === "event" && /\bshot blocked\b|\battempt blocked\b/.test(lower)) kind = "shotBlocked";
-  if (kind === "event" && /\bassist\b/.test(typeLower)) kind = "assist";
+  const kind = classifyEspnEventType(typeLower, detail);
+  const ownGoal = /\bown goal\b/.test(typeLower) || (kind === "goal" && /\bown goal\b/i.test(detailText));
   return {
     kind,
     minute: detail.clock?.displayValue || detail.time?.displayValue || "",
@@ -414,6 +404,23 @@ function normalizeDetail(detail, competitors = []) {
     text: detailText,
     type: text
   };
+}
+
+function classifyEspnEventType(typeLower, detail = {}) {
+  if (detail.scoringPlay || /\b(own goal|goal)\b/.test(typeLower)) return "goal";
+  if (detail.redCard || /\bred card\b|\bred\b/.test(typeLower)) return "red";
+  if (detail.yellowCard || /\byellow card\b|\byellow\b/.test(typeLower)) return "yellow";
+  if (/\bsubstitution\b|\bsubstitute\b/.test(typeLower)) return "sub";
+  if (/\battempt saved\b|\bsave\b|\bsaved\b/.test(typeLower)) return "save";
+  if (/\battempt blocked\b|\bshot blocked\b|\bblocked shot\b/.test(typeLower)) return "shotBlocked";
+  if (/\battempt missed\b|\bshot off target\b|\bmissed shot\b/.test(typeLower)) return "shotOff";
+  if (/\bshot on target\b/.test(typeLower)) return "shotOn";
+  if (/\bassist\b/.test(typeLower)) return "assist";
+  if (/\bcorner\b/.test(typeLower)) return "corner";
+  if (/\boffside\b/.test(typeLower)) return "offside";
+  if (/\bfoul\b/.test(typeLower)) return "foul";
+  if (/\bpenalty\b/.test(typeLower)) return "penalty";
+  return "event";
 }
 
 function mapStats(stats) {
