@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Notification, ipcMain, screen, shell } = require("electron");
+const { app, BrowserWindow, ipcMain, screen, shell } = require("electron");
 const fs = require("fs");
 const path = require("path");
 
@@ -144,18 +144,6 @@ ipcMain.handle("open-external", async (_event, url) => {
   if (typeof url === "string" && /^https?:\/\//.test(url)) {
     await shell.openExternal(url);
   }
-});
-
-ipcMain.handle("show-notification", async (_event, payload = {}) => {
-  const title = String(payload.title || "").trim();
-  const body = String(payload.body || "").trim();
-  if (!title || !Notification.isSupported()) return false;
-  new Notification({
-    title,
-    body,
-    icon: APP_ICON
-  }).show();
-  return true;
 });
 
 ipcMain.handle("set-compact-mode", async (event, compact) => {

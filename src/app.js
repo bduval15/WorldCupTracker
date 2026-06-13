@@ -8,18 +8,8 @@ const LIVE_REFRESH_MAX_MS = 25_000;
 const SUMMARY_LIVE_MS = 30_000;
 const SUMMARY_FINAL_MS = 12 * 60 * 60_000;
 const summaryFetchedAt = new Map();
-const notifiedEvents = new Set(readJsonSetting("notifiedEvents", []));
 let refreshTimer = null;
 let refreshInFlight = false;
-let notificationsReady = false;
-
-function readJsonSetting(key, fallback) {
-  try {
-    return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
-  } catch {
-    return fallback;
-  }
-}
 
 const state = {
   view: "today",
@@ -29,12 +19,6 @@ const state = {
   matchStatusFilter: "all",
   favoriteTeam: localStorage.getItem("favoriteTeam") || "",
   compactMode: localStorage.getItem("compactMode") === "true",
-  alerts: {
-    kickoff: localStorage.getItem("alertKickoff") === "true",
-    goals: localStorage.getItem("alertGoals") === "true",
-    final: localStorage.getItem("alertFinal") === "true",
-    red: localStorage.getItem("alertRed") === "true"
-  },
   source: "Bundled fallback",
   sourceUrl: "",
   lastUpdated: null,
@@ -199,10 +183,6 @@ const els = {
   favoriteSelect: document.getElementById("favoriteTeamSelect"),
   compactButton: document.getElementById("compactModeButton"),
   compactNavButton: document.getElementById("compactNavButton"),
-  alertKickoff: document.getElementById("kickoffAlerts"),
-  alertGoals: document.getElementById("goalAlerts"),
-  alertFinal: document.getElementById("finalAlerts"),
-  alertRed: document.getElementById("redCardAlerts"),
   dialog: document.getElementById("matchDialog"),
   dialogBody: document.getElementById("matchDialogBody")
 };
@@ -246,19 +226,6 @@ els.compactNavButton.addEventListener("click", () => {
   applyCompactMode(!state.compactMode);
 });
 
-[
-  ["kickoff", els.alertKickoff],
-  ["goals", els.alertGoals],
-  ["final", els.alertFinal],
-  ["red", els.alertRed]
-].forEach(([key, input]) => {
-  input.addEventListener("change", () => {
-    state.alerts[key] = input.checked;
-    localStorage.setItem(`alert${titleCase(key)}`, String(input.checked));
-    if (input.checked) requestNotificationPermission();
-  });
-});
-
 els.refresh.addEventListener("click", () => refreshLive({ force: true }));
 
 document.addEventListener("visibilitychange", () => {
@@ -291,7 +258,6 @@ async function refreshLive(options = {}) {
   refreshInFlight = true;
   setLiveStatus("Syncing", "ESPN live");
   try {
-    const previousMatches = new Map(state.matches.filter((match) => match.id).map((match) => [match.id, match]));
     const payload = await window.worldCup.fetchLive({ force: Boolean(options.force) });
     const parsed = parseEspnScoreboard(payload.data);
     if (parsed.matches.length) {
@@ -304,7 +270,6 @@ async function refreshLive(options = {}) {
       state.liveError = null;
       recalculateStandings(false);
       initFavoriteSelect();
-      maybeNotifyMatchEvents(parsed.matches, previousMatches);
       setLiveStatus(payload.stale ? "Offline cache" : payload.fromCache ? "Updated" : "Live", formatDateTime(payload.fetchedAt));
     } else {
       throw new Error("ESPN returned no World Cup events.");
@@ -625,13 +590,8 @@ function initFavoriteSelect() {
 }
 
 function initPreferenceControls() {
-  els.alertKickoff.checked = state.alerts.kickoff;
-  els.alertGoals.checked = state.alerts.goals;
-  els.alertFinal.checked = state.alerts.final;
-  els.alertRed.checked = state.alerts.red;
   els.compactButton.setAttribute("aria-pressed", String(state.compactMode));
   els.compactNavButton.setAttribute("aria-pressed", String(state.compactMode));
-  if (Object.values(state.alerts).some(Boolean)) requestNotificationPermission();
 }
 
 function updateFavoriteIdentity() {
@@ -663,31 +623,6 @@ function applyCompactMode(enabled) {
   els.compactButton.setAttribute("aria-pressed", String(enabled));
   els.compactNavButton.setAttribute("aria-pressed", String(enabled));
   window.worldCup.setCompactMode?.(enabled);
-}
-
-function requestNotificationPermission() {
-  if (!("Notification" in window) || Notification.permission !== "default") return;
-  Notification.requestPermission().catch(() => {});
-}
-
-function showLocalNotification(title, body) {
-  if (window.worldCup?.showNotification) {
-    window.worldCup.showNotification({ title, body }).catch(() => {});
-    return;
-  }
-  if ("Notification" in window && Notification.permission === "granted") {
-    new Notification(title, {
-      body,
-      icon: "assets/soccer-ball.png",
-      silent: false
-    });
-  }
-}
-
-function rememberNotification(key) {
-  notifiedEvents.add(key);
-  while (notifiedEvents.size > 300) notifiedEvents.delete(notifiedEvents.values().next().value);
-  localStorage.setItem("notifiedEvents", JSON.stringify([...notifiedEvents]));
 }
 
 function renderSummary() {
@@ -1326,45 +1261,6 @@ function matchImportanceBadges(match) {
     if (row.pts <= 1 && row.played >= 2) badges.push(`${codeForTeam(team)} must win`);
   });
   return [...new Set(badges)].slice(0, 3);
-}
-
-function maybeNotifyMatchEvents(matches, previousMatches = new Map()) {
-  if (!notificationsReady) {
-    baselineExistingNotificationEvents(matches);
-    notificationsReady = true;
-  }
-  if (!Object.values(state.alerts).some(Boolean)) return;
-  matches.forEach((match) => {
-    const title = `${match.home} vs ${match.away}`;
-    const previous = previousMatches.get(match.id);
-    const justWentLive = match.statusState === "in" && previous?.statusState !== "in";
-    notifyOnce(state.alerts.kickoff && justWentLive, `kickoff:${match.id}`, "Match is live", title);
-    notifyOnce(state.alerts.final && match.completed, `final:${match.id}`, "Final score", `${match.home} ${scoreText(match)} ${match.away}`);
-    match.goals.forEach((goal, index) => {
-      notifyOnce(state.alerts.goals, `goal:${match.id}:${goal.minute}:${goal.athlete || goal.team || index}`, `Goal ${goal.team || ""}`.trim(), `${goal.minute || ""} ${goal.athlete || title}`.trim());
-    });
-    match.cards.filter((card) => card.kind === "red").forEach((card, index) => {
-      notifyOnce(state.alerts.red, `red:${match.id}:${card.minute}:${card.athlete || card.team || index}`, `Red card ${card.team || ""}`.trim(), `${card.minute || ""} ${card.athlete || title}`.trim());
-    });
-  });
-}
-
-function baselineExistingNotificationEvents(matches) {
-  matches.forEach((match) => {
-    if (match.completed) rememberNotification(`final:${match.id}`);
-    match.goals.forEach((goal, index) => {
-      rememberNotification(`goal:${match.id}:${goal.minute}:${goal.athlete || goal.team || index}`);
-    });
-    match.cards.filter((card) => card.kind === "red").forEach((card, index) => {
-      rememberNotification(`red:${match.id}:${card.minute}:${card.athlete || card.team || index}`);
-    });
-  });
-}
-
-function notifyOnce(shouldNotify, key, title, body) {
-  if (!shouldNotify || notifiedEvents.has(key)) return;
-  rememberNotification(key);
-  showLocalNotification(title, body);
 }
 
 function rankedScorers() {

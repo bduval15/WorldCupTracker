@@ -2,7 +2,7 @@
 
 A Windows desktop app for following the FIFA World Cup 2026 from one live dashboard.
 
-World Cup 2026 Live includes live match cards, group tables, standings, bracket paths, team favorites, match alerts, player and team stats, timelines, goals, cards, and match detail pages.
+World Cup 2026 Live includes live match cards, group tables, standings, bracket paths, team favorites, player and team stats, timelines, goals, cards, and match detail pages.
 
 ## Download
 
@@ -27,7 +27,6 @@ Choose one of the release assets:
 - Knockout bracket view from Round of 32 through the final.
 - Match detail pages with live score, kickoff, location, officials, ESPN match link, stats, key events, and timeline.
 - Favorite team selection with team-themed colors and quick team summary.
-- Optional match alerts for kickoff, goals, final score, and red cards.
 - Compact mode for a smaller desktop view.
 - Offline fallback data if the live feed is unavailable.
 
@@ -49,7 +48,7 @@ Public release builds may use a shared cached feed so app users can receive near
 
 ## Privacy
 
-World Cup 2026 Live does not require an account and does not collect analytics. Favorite team, compact mode, alert preferences, and already-shown notification IDs are stored locally on your device using browser local storage inside the Electron app.
+World Cup 2026 Live does not require an account and does not collect analytics. Favorite team and compact mode preferences are stored locally on your device using browser local storage inside the Electron app.
 
 ## Build From Source
 

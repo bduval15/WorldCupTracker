@@ -196,58 +196,6 @@ button, input, select { font: inherit; }
   box-shadow: 0 0 0 3px rgba(248, 207, 82, .16);
 }
 
-.sidebar-panel {
-  display: grid;
-  gap: 9px;
-  padding: 12px;
-  border: 1px solid rgba(248, 207, 82, .18);
-  border-radius: 8px;
-  background: linear-gradient(180deg, rgba(6, 17, 29, .74), rgba(10, 22, 31, .92));
-}
-
-.sidebar-panel-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.sidebar-panel-head span {
-  color: var(--gold);
-  font-size: 12px;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.icon-action {
-  border: 1px solid rgba(248, 207, 82, .28);
-  border-radius: 999px;
-  padding: 5px 9px;
-  background: rgba(248, 207, 82, .08);
-  color: var(--ink);
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 850;
-}
-
-.icon-action[aria-pressed="true"] {
-  border-color: var(--team-secondary);
-  background: rgba(248, 207, 82, .16);
-}
-
-.toggle-row {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 750;
-}
-
-.toggle-row input {
-  accent-color: var(--team-primary);
-}
-
 .sidebar-live-match {
   display: grid;
   gap: 5px;
@@ -348,10 +296,6 @@ button, input, select { font: inherit; }
 .sidebar-live-events li.yellow span { color: var(--yellow); }
 .sidebar-live-events li.red span { color: var(--red); }
 .sidebar-live-events li.sub span { color: var(--blue); }
-
-.match-alerts {
-  margin-top: 0;
-}
 
 .live-card {
   margin-top: 0;
@@ -1722,8 +1666,7 @@ body.compact-mode .compact-nav-toggle {
   display: block;
 }
 
-body.compact-mode .favorite-picker,
-body.compact-mode .sidebar-panel {
+body.compact-mode .favorite-picker {
   display: none;
 }
 
