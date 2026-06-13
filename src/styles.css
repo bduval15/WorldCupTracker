@@ -733,6 +733,25 @@ input[type="search"]:disabled {
   display: block;
 }
 
+.favorite-team-details .favorite-opponent {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.favorite-team-details .favorite-opponent img,
+.favorite-team-details .favorite-opponent .team-code {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+}
+
+.favorite-team-details .favorite-opponent img.flag-img {
+  height: 12px;
+  border-radius: 2px;
+}
+
 .group-leaders-card {
   grid-column: span 2;
 }

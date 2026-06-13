@@ -1134,8 +1134,13 @@ function favoriteMatchLabel(match) {
 function favoriteMatchDetail(match) {
   const opponent = match.home === state.favoriteTeam ? match.away : match.home;
   const score = match.completed || match.statusState === "in" ? ` / ${scoreText(match)}` : "";
-  const time = match.time && match.time !== "TBD" ? `, ${match.time}` : "";
-  return `${escapeHtml(opponent)}${escapeHtml(score)} / ${escapeHtml(formatMatchDate(match.date))}${time ? `<span>${escapeHtml(match.time)}</span>` : ""}`;
+  const kickoff = match.time && match.time !== "TBD"
+    ? `${formatMatchDate(match.date)} ${match.time}`
+    : formatMatchDate(match.date);
+  return `
+    <span class="favorite-opponent">${teamBadge(opponent)}${escapeHtml(opponent)}${escapeHtml(score)}</span>
+    <span>${escapeHtml(kickoff)}</span>
+  `;
 }
 
 function favoriteTeamTopScorer() {
