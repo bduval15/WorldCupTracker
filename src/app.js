@@ -190,6 +190,9 @@ const els = {
   refresh: document.getElementById("refreshButton"),
   liveStatus: document.getElementById("liveStatus"),
   liveDetail: document.getElementById("liveDetail"),
+  compactLiveStatus: document.getElementById("compactLiveStatus"),
+  compactLiveDetail: document.getElementById("compactLiveDetail"),
+  sidebarLiveMatch: document.getElementById("sidebarLiveMatch"),
   brandMark: document.getElementById("brandMark"),
   brandSubtitle: document.getElementById("brandSubtitle"),
   favoriteSelect: document.getElementById("favoriteTeamSelect"),
@@ -519,10 +522,37 @@ function render() {
   els.title.textContent = viewTitles[state.view];
   updateFavoriteIdentity();
   updateSearchUi();
+  renderSidebarLiveMatch();
   renderSummary();
   const renderers = { today: renderToday, matches: renderMatches, stats: renderStats, groups: renderGroups, bracket: renderBracket };
   els.root.innerHTML = "";
   els.root.appendChild(renderers[state.view]());
+}
+
+function renderSidebarLiveMatch() {
+  const liveMatches = state.matches.filter((match) => match.statusState === "in");
+  const match = liveMatches[0] || upcomingMatches()[0];
+  if (!match) {
+    els.sidebarLiveMatch.innerHTML = `
+      <span class="sidebar-live-label">Live</span>
+      <strong>No matches live</strong>
+      <small>Schedule complete</small>
+    `;
+    els.sidebarLiveMatch.removeAttribute("tabindex");
+    els.sidebarLiveMatch.onclick = null;
+    els.sidebarLiveMatch.onkeydown = null;
+    return;
+  }
+
+  const isLive = match.statusState === "in";
+  els.sidebarLiveMatch.innerHTML = `
+    <span class="sidebar-live-label">${isLive ? "Live" : "Next"}</span>
+    <strong>${escapeHtml(match.homeAbbr || codeForTeam(match.home))} ${scoreText(match)} ${escapeHtml(match.awayAbbr || codeForTeam(match.away))}</strong>
+    <small>${escapeHtml(isLive ? match.status : `${formatMatchDate(match.date)} ${match.time}`)}${liveMatches.length > 1 ? ` / ${liveMatches.length} live` : ""}</small>
+  `;
+  els.sidebarLiveMatch.tabIndex = 0;
+  els.sidebarLiveMatch.onclick = () => openMatch(match);
+  els.sidebarLiveMatch.onkeydown = (event) => { if (event.key === "Enter") openMatch(match); };
 }
 
 function updateSearchUi() {
@@ -1530,6 +1560,8 @@ function searchableText(values) {
 function setLiveStatus(status, detail) {
   els.liveStatus.textContent = status;
   els.liveDetail.textContent = detail;
+  els.compactLiveStatus.textContent = status;
+  els.compactLiveDetail.textContent = detail;
 }
 
 function summaryCard(label, value, detail, action = "") {

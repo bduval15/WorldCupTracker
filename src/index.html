@@ -31,7 +31,8 @@
             <option value="">Choose a team</option>
           </select>
         </label>
-        <section class="sidebar-panel">
+        <section id="sidebarLiveMatch" class="sidebar-live-match" aria-label="Live match"></section>
+        <section class="sidebar-panel match-alerts">
           <div class="sidebar-panel-head">
             <span>Match alerts</span>
           </div>
@@ -52,7 +53,7 @@
             <span>Red cards</span>
           </label>
         </section>
-        <div class="live-card">
+        <div class="live-card feed-status">
           <span class="pulse" aria-hidden="true"></span>
           <div>
             <strong id="liveStatus">Preparing live feed</strong>
@@ -76,6 +77,13 @@
 
         <section id="summary" class="summary-grid"></section>
         <section id="viewRoot" class="view-root"></section>
+        <div class="compact-feed-status" aria-label="Feed status">
+          <span class="pulse" aria-hidden="true"></span>
+          <div>
+            <strong id="compactLiveStatus">Preparing live feed</strong>
+            <span id="compactLiveDetail">Bundled data is ready.</span>
+          </div>
+        </div>
       </main>
     </div>
 

@@ -244,6 +244,46 @@ button, input, select { font: inherit; }
   accent-color: var(--team-primary);
 }
 
+.sidebar-live-match {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid rgba(17, 197, 141, .38);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(17, 197, 141, .12), rgba(10, 22, 31, .92));
+  cursor: pointer;
+}
+
+.sidebar-live-match:hover,
+.sidebar-live-match:focus {
+  outline: 2px solid rgba(17, 197, 141, .18);
+  border-color: var(--green);
+  background: linear-gradient(180deg, rgba(17, 197, 141, .17), rgba(10, 22, 31, .96));
+}
+
+.sidebar-live-label {
+  color: var(--gold);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.sidebar-live-match strong {
+  color: #fff;
+  font-size: 16px;
+  line-height: 1.25;
+}
+
+.sidebar-live-match small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.match-alerts {
+  margin-top: auto;
+}
+
 .live-card {
   margin-top: auto;
   display: grid;
@@ -257,6 +297,10 @@ button, input, select { font: inherit; }
   min-height: 58px;
 }
 
+.match-alerts + .live-card {
+  margin-top: 0;
+}
+
 .live-card strong, .live-card span {
   display: block;
   line-height: 1.35;
@@ -265,6 +309,10 @@ button, input, select { font: inherit; }
 .live-card span {
   color: var(--muted);
   font-size: 12px;
+}
+
+.compact-feed-status {
+  display: none;
 }
 
 .pulse {
@@ -1593,9 +1641,36 @@ body.compact-mode .sidebar-panel {
   display: none;
 }
 
-body.compact-mode .live-card {
-  margin-top: 0;
+body.compact-mode .sidebar-live-match {
+  order: 3;
+}
+
+body.compact-mode .feed-status {
+  display: none;
+}
+
+body.compact-mode .compact-feed-status {
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  align-items: center;
+  gap: 9px;
+  margin-top: 18px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(21, 45, 36, .92), rgba(17, 32, 48, .92));
   min-height: 48px;
+}
+
+body.compact-mode .compact-feed-status strong,
+body.compact-mode .compact-feed-status span {
+  display: block;
+  line-height: 1.35;
+}
+
+body.compact-mode .compact-feed-status span {
+  color: var(--muted);
+  font-size: 12px;
 }
 
 body.compact-mode .content {
