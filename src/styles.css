@@ -1270,12 +1270,32 @@ dialog form {
 
 .dialog-header {
   display: grid;
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 14px;
   margin-bottom: 16px;
 }
 .dialog-header h2 {
   font-size: 30px;
 }
+
+.dialog-link {
+  border: 1px solid rgba(248, 207, 82, .38);
+  border-radius: 8px;
+  padding: 9px 12px;
+  background: rgba(248, 207, 82, .08);
+  color: var(--ink);
+  cursor: pointer;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.dialog-link:hover,
+.dialog-link:focus {
+  border-color: var(--gold);
+  background: rgba(248, 207, 82, .16);
+}
+
 .status-pill {
   justify-self: start;
   padding: 5px 10px;
@@ -1438,6 +1458,16 @@ dialog form {
   font-weight: 800;
   cursor: pointer;
   text-align: left;
+}
+
+@media (max-width: 720px) {
+  .dialog-header {
+    grid-template-columns: 1fr;
+  }
+
+  .dialog-link {
+    justify-self: start;
+  }
 }
 
 body.compact-mode .app-shell {

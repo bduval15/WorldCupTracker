@@ -936,9 +936,12 @@ function renderMatchDialog(match, summary = null) {
 
   els.dialogBody.innerHTML = `
     <div class="dialog-header">
-      <p class="eyebrow">${escapeHtml(match.stage)}${match.group ? ` / Group ${match.group}` : ""}</p>
-      <h2>${escapeHtml(match.home)} ${scoreText(match)} ${escapeHtml(match.away)}</h2>
-      <span class="status-pill">${escapeHtml(match.status)}</span>
+      <div>
+        <p class="eyebrow">${escapeHtml(match.stage)}${match.group ? ` / Group ${match.group}` : ""}</p>
+        <h2>${escapeHtml(match.home)} ${scoreText(match)} ${escapeHtml(match.away)}</h2>
+        <span class="status-pill">${escapeHtml(match.status)}</span>
+      </div>
+      <button class="dialog-link" data-url="${escapeHtml(espnLink)}">ESPN Match Page</button>
     </div>
     <div class="detail-grid">
       ${detailTile("Kickoff", `${formatMatchDate(match.date)} / ${match.time}`)}
@@ -961,10 +964,9 @@ function renderMatchDialog(match, summary = null) {
       <h3>Timeline</h3>
       ${eventList(meaningfulTimeline, true)}
     </section>
-    <button class="text-link" data-url="${escapeHtml(espnLink)}">Open ESPN match page</button>
   `;
 
-  els.dialogBody.querySelector(".text-link")?.addEventListener("click", (event) => {
+  els.dialogBody.querySelector(".dialog-link")?.addEventListener("click", (event) => {
     window.worldCup.openExternal(event.currentTarget.dataset.url);
   });
 }
