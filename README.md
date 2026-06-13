@@ -30,11 +30,11 @@ Use one of the release assets:
 
 Live data is fetched from ESPN's public FIFA World Cup scoreboard and match summary endpoints. If the live source is unavailable, the app falls back to bundled tournament data.
 
-The app includes client-side safeguards so it does not poll aggressively: live refreshes are jittered, slower when no match is live, paused while the app is hidden, and match summaries are cached. For large public distribution, use a shared cached feed or proxy and set `WORLD_CUP_SCOREBOARD_URL` for builds that should read from that cache instead of sending every installed desktop client directly to ESPN.
+The app includes client-side safeguards so it does not poll aggressively: live refreshes are jittered, slower when no match is live, paused while the app is hidden, and match summaries are cached briefly. For large public distribution, use a shared cached feed or proxy and set `WORLD_CUP_SCOREBOARD_URL` for builds that should read from that cache instead of sending every installed desktop client directly to ESPN.
 
 ## Shared Feed Proxy
 
-For a private build sent to a few friends, the built-in throttling is usually enough. For a public release, deploy the included Cloudflare Worker so all desktop clients read from one cached feed instead of each client calling ESPN directly.
+For a private build sent to a few friends, the built-in throttling is usually enough. For a public release, deploy the included Cloudflare Worker so all desktop clients read from one shared cached feed instead of each client calling ESPN directly. The Worker is configured for near-live updates with a short scoreboard cache and a short match-summary cache.
 
 Deploy the proxy:
 
@@ -58,8 +58,8 @@ npm run dist
 
 Proxy endpoints:
 
-- `/scoreboard` caches the tournament scoreboard.
-- `/summary?event=EVENT_ID` caches individual match summaries.
+- `/scoreboard` caches the tournament scoreboard for about 15 seconds.
+- `/summary?event=EVENT_ID` caches individual match summaries for about 45 seconds.
 - `/health` returns a simple health check.
 
 ## Disclaimer

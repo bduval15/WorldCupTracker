@@ -8,8 +8,8 @@ const ESPN_SUMMARY =
 const ESPN_SOURCE = "https://www.espn.com/soccer/scoreboard/_/league/fifa.world";
 const LIVE_SCOREBOARD = process.env.WORLD_CUP_SCOREBOARD_URL || ESPN_SCOREBOARD;
 const LIVE_SUMMARY = process.env.WORLD_CUP_SUMMARY_URL || ESPN_SUMMARY;
-const SCOREBOARD_CACHE_MS = 120_000;
-const SUMMARY_CACHE_MS = 10 * 60_000;
+const SCOREBOARD_CACHE_MS = 15_000;
+const SUMMARY_CACHE_MS = 45_000;
 const APP_ICON = path.join(__dirname, "src", "assets", "soccer-ball.png");
 
 let mainWindow;
@@ -97,7 +97,7 @@ ipcMain.handle("fetch-live-world-cup", async (_event, options = {}) => {
   const result = await cachedFetchJson("scoreboard", LIVE_SCOREBOARD, SCOREBOARD_CACHE_MS, Boolean(options.force));
   return {
     data: result.data,
-    sourceName: result.fromCache ? "Cached FIFA World Cup scoreboard" : "ESPN FIFA World Cup scoreboard",
+    sourceName: result.fromCache ? "Recently updated FIFA World Cup scoreboard" : "ESPN FIFA World Cup scoreboard",
     sourceUrl: ESPN_SOURCE,
     fetchedAt: result.fetchedAt,
     fromCache: result.fromCache,
@@ -113,7 +113,7 @@ ipcMain.handle("fetch-match-summary", async (_event, eventId, options = {}) => {
   const result = await cachedFetchJson(`summary:${eventId}`, `${LIVE_SUMMARY}${eventId}`, SUMMARY_CACHE_MS, Boolean(options.force));
   return {
     data: result.data,
-    sourceName: result.fromCache ? "Cached match summary" : "ESPN match summary",
+    sourceName: result.fromCache ? "Recently updated match summary" : "ESPN match summary",
     fetchedAt: result.fetchedAt,
     fromCache: result.fromCache,
     stale: Boolean(result.stale)

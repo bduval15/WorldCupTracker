@@ -1,11 +1,11 @@
 const groupLetters = Object.keys(window.SEED_DATA.groups);
 const INITIAL_REFRESH_MIN_MS = 5_000;
 const INITIAL_REFRESH_MAX_MS = 20_000;
-const IDLE_REFRESH_MIN_MS = 4 * 60_000;
-const IDLE_REFRESH_MAX_MS = 7 * 60_000;
-const LIVE_REFRESH_MIN_MS = 75_000;
-const LIVE_REFRESH_MAX_MS = 120_000;
-const SUMMARY_LIVE_MS = 90_000;
+const IDLE_REFRESH_MIN_MS = 3 * 60_000;
+const IDLE_REFRESH_MAX_MS = 5 * 60_000;
+const LIVE_REFRESH_MIN_MS = 15_000;
+const LIVE_REFRESH_MAX_MS = 25_000;
+const SUMMARY_LIVE_MS = 30_000;
 const SUMMARY_FINAL_MS = 12 * 60 * 60_000;
 const summaryFetchedAt = new Map();
 const notifiedEvents = new Set(readJsonSetting("notifiedEvents", []));
@@ -304,7 +304,7 @@ async function refreshLive(options = {}) {
       recalculateStandings(false);
       initFavoriteSelect();
       maybeNotifyMatchEvents(parsed.matches, previousMatches);
-      setLiveStatus(payload.fromCache ? "Cached" : "Live", formatDateTime(payload.fetchedAt));
+      setLiveStatus(payload.stale ? "Offline cache" : payload.fromCache ? "Updated" : "Live", formatDateTime(payload.fetchedAt));
     } else {
       throw new Error("ESPN returned no World Cup events.");
     }

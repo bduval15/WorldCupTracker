@@ -4,8 +4,8 @@ const ESPN_SUMMARY =
   "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary?event=";
 
 const CACHE_SECONDS = {
-  scoreboard: 60,
-  summary: 300
+  scoreboard: 15,
+  summary: 45
 };
 
 export default {
