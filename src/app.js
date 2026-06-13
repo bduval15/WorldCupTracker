@@ -720,7 +720,7 @@ function renderMatches() {
     filters.append(chip);
   });
   wrap.append(filters);
-  wrap.append(matchGrid(filterMatchGroup(filterMatches(state.matches, true)), true));
+  wrap.append(matchGrid(sortMatchCenterMatches(filterMatchGroup(filterMatches(state.matches, true))), true));
   return wrap;
 }
 
@@ -1559,6 +1559,11 @@ function filterMatches(matches, includeStatus = false) {
 function filterMatchGroup(matches) {
   if (!state.matchGroupFilter) return matches;
   return matches.filter((match) => match.group === state.matchGroupFilter);
+}
+
+function sortMatchCenterMatches(matches) {
+  if (state.matchStatusFilter !== "finished") return matches;
+  return [...matches].sort((a, b) => new Date(b.date) - new Date(a.date));
 }
 
 function matchMatchesQuery(match) {
