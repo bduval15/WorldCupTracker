@@ -396,7 +396,6 @@ function normalizeDetail(detail, competitors = []) {
   const ownGoal = /\bown goal\b/.test(lower);
   let kind = "event";
   if (detail.scoringPlay || /\b(own goal|goal)\b/.test(typeLower)) kind = "goal";
-  if (!detail.scoringPlay && lower.includes("assist")) kind = "assist";
   if (detail.yellowCard || lower.includes("yellow")) kind = "yellow";
   if (detail.redCard || lower.includes("red card")) kind = "red";
   if (lower.includes("substitution")) kind = "sub";
@@ -404,6 +403,7 @@ function normalizeDetail(detail, competitors = []) {
   if (kind === "event" && /\bshot on target\b/.test(lower)) kind = "shotOn";
   if (kind === "event" && /\bshot off target\b|\battempt missed\b/.test(lower)) kind = "shotOff";
   if (kind === "event" && /\bshot blocked\b|\battempt blocked\b/.test(lower)) kind = "shotBlocked";
+  if (kind === "event" && /\bassist\b/.test(typeLower)) kind = "assist";
   return {
     kind,
     minute: detail.clock?.displayValue || detail.time?.displayValue || "",
