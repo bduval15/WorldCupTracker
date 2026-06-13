@@ -571,7 +571,7 @@ function sidebarLiveStats(match) {
   const red = match.cards.filter((card) => card.kind === "red").length || sidebarMatchStat(match, "redCards");
   const shots = sidebarMatchStat(match, "totalShots");
   const items = [
-    [`${match.goals.length}`, "goals"],
+    [`${matchGoalTotal(match)}`, "goals"],
     [`${yellow}`, "yellow"],
     [`${red}`, "red"]
   ];
@@ -895,7 +895,7 @@ function matchCard(match, showDetails) {
       <span>${formatMatchDate(match.date)} / ${escapeHtml(match.time)}</span>
     </div>
     ${showDetails ? `<div class="quick-stats">
-      <span>${match.goals.length} goals</span>
+      <span>${matchGoalTotal(match)} goals</span>
       <span>${match.cards.filter((card) => card.kind === "yellow").length} yellow</span>
       <span>${match.cards.filter((card) => card.kind === "red").length} red</span>
     </div>` : ""}
@@ -1388,17 +1388,15 @@ function rankedScorers() {
 function rankedTeamGoals() {
   const totals = new Map();
   state.matches.forEach((match) => {
-    if (match.goals.length) {
-      match.goals.forEach((goal) => {
-        if (!goal.team) return;
-        totals.set(goal.team, (totals.get(goal.team) || 0) + 1);
-      });
-      return;
-    }
     if (match.completed || match.statusState === "in") {
       if (Number.isFinite(match.homeScore)) totals.set(match.home, (totals.get(match.home) || 0) + match.homeScore);
       if (Number.isFinite(match.awayScore)) totals.set(match.away, (totals.get(match.away) || 0) + match.awayScore);
+      return;
     }
+    match.goals.forEach((goal) => {
+      if (!goal.team) return;
+      totals.set(goal.team, (totals.get(goal.team) || 0) + 1);
+    });
   });
   return [...totals.entries()]
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
@@ -1656,6 +1654,13 @@ function sortTable(a, b) {
 
 function scoreText(match) {
   return Number.isFinite(match.homeScore) && Number.isFinite(match.awayScore) ? `${match.homeScore} - ${match.awayScore}` : "vs";
+}
+
+function matchGoalTotal(match) {
+  if (Number.isFinite(match.homeScore) && Number.isFinite(match.awayScore)) {
+    return match.homeScore + match.awayScore;
+  }
+  return match.goals.length;
 }
 
 function safeScore(score) {
