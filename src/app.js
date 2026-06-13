@@ -1093,11 +1093,20 @@ function statsTable(match, stats) {
   const keys = ["totalGoals", "totalShots", "shotsOnTarget", "possessionPct", "wonCorners", "foulsCommitted", "yellowCards", "redCards", "offsides", "saves", "totalPasses", "accuratePasses"];
   const rows = keys.map((key) => {
     const label = left[key]?.label || right[key]?.label || statLabels[key] || key;
-    const leftValue = left[key]?.value || "-";
-    const rightValue = right[key]?.value || "-";
+    const [leftValue, rightValue] = statRowValues(match, left, right, key);
     return `<tr><td>${escapeHtml(leftValue)}</td><th>${escapeHtml(label)}</th><td>${escapeHtml(rightValue)}</td></tr>`;
   }).join("");
   return `<table class="stats-table"><thead><tr><th>${escapeHtml(match.homeAbbr || match.home)}</th><th></th><th>${escapeHtml(match.awayAbbr || match.away)}</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function statRowValues(match, left, right, key) {
+  if (key === "totalGoals") {
+    return [
+      Number.isFinite(match.homeScore) ? String(match.homeScore) : left[key]?.value || "-",
+      Number.isFinite(match.awayScore) ? String(match.awayScore) : right[key]?.value || "-"
+    ];
+  }
+  return [left[key]?.value || "-", right[key]?.value || "-"];
 }
 
 function eventList(events, dense = false) {
