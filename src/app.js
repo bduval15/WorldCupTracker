@@ -7,7 +7,6 @@ const LIVE_REFRESH_MIN_MS = 15_000;
 const LIVE_REFRESH_MAX_MS = 25_000;
 const SUMMARY_LIVE_MS = 30_000;
 const SUMMARY_FINAL_MS = 12 * 60 * 60_000;
-const PROJECT_URL = "https://github.com/bduval15/WorldCupTracker";
 const summaryFetchedAt = new Map();
 let refreshTimer = null;
 let refreshInFlight = false;
@@ -25,7 +24,6 @@ const state = {
   source: "Bundled fallback",
   sourceUrl: "",
   lastUpdated: null,
-  appInfo: { name: "World Cup 2026 Live", version: "1.0.0" },
   liveError: null,
   groups: structuredClone(window.SEED_DATA.groups),
   standings: {},
@@ -187,7 +185,6 @@ const els = {
   favoriteSelect: document.getElementById("favoriteTeamSelect"),
   compactButton: document.getElementById("compactModeButton"),
   compactNavButton: document.getElementById("compactNavButton"),
-  aboutButton: document.getElementById("aboutButton"),
   dialog: document.getElementById("matchDialog"),
   dialogBody: document.getElementById("matchDialogBody")
 };
@@ -196,7 +193,6 @@ recalculateStandings();
 initFavoriteSelect();
 initPreferenceControls();
 applyCompactMode(state.compactMode);
-loadAppInfo();
 render();
 scheduleNextRefresh(randomMs(INITIAL_REFRESH_MIN_MS, INITIAL_REFRESH_MAX_MS));
 
@@ -230,7 +226,6 @@ els.compactNavButton.addEventListener("click", () => {
 });
 
 els.refresh.addEventListener("click", () => refreshLive({ force: true }));
-els.aboutButton.addEventListener("click", openAboutDialog);
 
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
@@ -458,42 +453,6 @@ async function openMatch(match) {
   }
 }
 
-function openAboutDialog() {
-  const updated = state.lastUpdated ? formatDateTime(state.lastUpdated) : "Not updated yet";
-  const source = state.liveError ? "Offline fallback" : "Live feed";
-  els.dialogBody.innerHTML = `
-    <div class="dialog-header about-dialog">
-      <div>
-        <p class="eyebrow">World Cup 2026 Live</p>
-        <h2>About</h2>
-        <p class="dialog-subtitle">Version ${escapeHtml(state.appInfo.version || "1.0.0")}</p>
-      </div>
-      <button class="dialog-link" type="button" data-url="${PROJECT_URL}">GitHub</button>
-    </div>
-    <section class="about-grid">
-      <article>
-        <span>Updates</span>
-        <strong>${escapeHtml(source)}</strong>
-        <small>${escapeHtml(updated)}</small>
-      </article>
-      <article>
-        <span>Privacy</span>
-        <strong>Local preferences</strong>
-        <small>Favorite team, compact mode, and last view stay on this device.</small>
-      </article>
-      <article>
-        <span>Data</span>
-        <strong>World Cup coverage</strong>
-        <small>Scores, stats, groups, bracket, and match details update while the app is open.</small>
-      </article>
-    </section>
-  `;
-  els.dialogBody.querySelector(".dialog-link[data-url]")?.addEventListener("click", (event) => {
-    window.worldCup.openExternal(event.currentTarget.dataset.url);
-  });
-  els.dialog.showModal();
-}
-
 async function refreshSelectedMatch(button) {
   if (!state.selectedMatch?.id) return;
   if (button) {
@@ -550,15 +509,6 @@ function setView(view) {
   state.view = view;
   localStorage.setItem("lastView", view);
   render();
-}
-
-async function loadAppInfo() {
-  try {
-    const info = await window.worldCup.getAppInfo?.();
-    if (info?.version) state.appInfo = info;
-  } catch {
-    state.appInfo = { name: "World Cup 2026 Live", version: "1.0.0" };
-  }
 }
 
 function render() {

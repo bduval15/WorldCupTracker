@@ -150,11 +150,6 @@ ipcMain.handle("open-external", async (_event, url) => {
   }
 });
 
-ipcMain.handle("get-app-info", async () => ({
-  name: app.getName(),
-  version: app.getVersion()
-}));
-
 ipcMain.handle("set-compact-mode", async (event, compact) => {
   const window = BrowserWindow.fromWebContents(event.sender);
   if (!window) return;

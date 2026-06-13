@@ -324,23 +324,6 @@ button, input, select { font: inherit; }
   font-size: 12px;
 }
 
-.about-button {
-  width: 100%;
-  border: 1px solid rgba(142, 164, 191, .28);
-  border-radius: 8px;
-  padding: 9px 10px;
-  background: rgba(6, 17, 29, .5);
-  color: var(--muted);
-  cursor: pointer;
-  font-weight: 850;
-}
-
-.about-button:hover,
-.about-button:focus {
-  border-color: rgba(248, 207, 82, .5);
-  color: #fff;
-}
-
 .compact-feed-status {
   display: none;
 }
@@ -1567,37 +1550,6 @@ dialog form {
   gap: 10px;
 }
 
-.about-dialog {
-  align-items: start;
-}
-
-.about-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.about-grid article {
-  display: grid;
-  gap: 5px;
-  padding: 12px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: rgba(12, 30, 43, .72);
-}
-
-.about-grid span {
-  color: var(--gold);
-  font-size: 12px;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.about-grid small {
-  color: var(--muted);
-  line-height: 1.35;
-}
-
 .stats-table th, .stats-table td {
   text-align: center;
 }
@@ -1722,10 +1674,6 @@ dialog form {
 
 @media (max-width: 720px) {
   .dialog-header {
-    grid-template-columns: 1fr;
-  }
-
-  .about-grid {
     grid-template-columns: 1fr;
   }
 
