@@ -777,7 +777,6 @@ function matchCard(match, showDetails) {
   card.tabIndex = 0;
   const scoring = match.goals.map((goal) => `${goal.minute} ${goal.athlete || goal.team}`).join(", ");
   const badges = matchImportanceBadges(match);
-  const hasReportedStats = match.statusState !== "pre" || match.goals.length || match.cards.length;
   card.innerHTML = `
     <div class="match-meta">
       <span>${escapeHtml(match.stage)}${match.group ? ` / Group ${match.group}` : ""}</span>
@@ -791,7 +790,7 @@ function matchCard(match, showDetails) {
     <div class="match-footer">
       <span>${formatMatchDate(match.date)} / ${escapeHtml(match.time)}</span>
     </div>
-    ${showDetails && hasReportedStats ? `<div class="quick-stats">
+    ${showDetails ? `<div class="quick-stats">
       <span>${match.goals.length} goals</span>
       <span>${match.cards.filter((card) => card.kind === "yellow").length} yellow</span>
       <span>${match.cards.filter((card) => card.kind === "red").length} red</span>
@@ -1183,6 +1182,7 @@ function matchImportanceBadges(match) {
   const badges = [];
   if (match.statusState === "in") badges.push("Live");
   if (match.completed) badges.push("Final");
+  if (match.statusState === "pre") badges.push("Upcoming");
   if (!match.group || match.completed) return badges;
   [match.home, match.away].forEach((team) => {
     const row = state.standings[match.group]?.find((item) => item.team === team);
