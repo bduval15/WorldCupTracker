@@ -8,8 +8,18 @@ const LIVE_REFRESH_MAX_MS = 120_000;
 const SUMMARY_LIVE_MS = 90_000;
 const SUMMARY_FINAL_MS = 12 * 60 * 60_000;
 const summaryFetchedAt = new Map();
+const notifiedEvents = new Set(readJsonSetting("notifiedEvents", []));
 let refreshTimer = null;
 let refreshInFlight = false;
+let notificationsReady = false;
+
+function readJsonSetting(key, fallback) {
+  try {
+    return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
+  } catch {
+    return fallback;
+  }
+}
 
 const state = {
   view: "today",
@@ -17,6 +27,13 @@ const state = {
   query: "",
   matchGroupFilter: "",
   favoriteTeam: localStorage.getItem("favoriteTeam") || "",
+  compactMode: localStorage.getItem("compactMode") === "true",
+  alerts: {
+    kickoff: localStorage.getItem("alertKickoff") === "true",
+    goals: localStorage.getItem("alertGoals") === "true",
+    final: localStorage.getItem("alertFinal") === "true",
+    red: localStorage.getItem("alertRed") === "true"
+  },
   source: "Bundled fallback",
   sourceUrl: "",
   lastUpdated: null,
@@ -131,6 +148,21 @@ const teamFlagCodes = {
   Uruguay: "uy", Uzbekistan: "uz"
 };
 
+const teamThemes = {
+  Argentina: ["#75aadb", "#ffffff", "#f6c85f"], Australia: ["#ffcd00", "#00843d", "#ffffff"],
+  Belgium: ["#fae042", "#ed2939", "#000000"], Brazil: ["#f7d117", "#009b3a", "#002776"],
+  Canada: ["#ff2b3d", "#ffffff", "#d80621"], Colombia: ["#fcd116", "#003893", "#ce1126"],
+  Croatia: ["#ff2b3d", "#ffffff", "#171796"], England: ["#ffffff", "#ce1124", "#1d428a"],
+  France: ["#0055a4", "#ffffff", "#ef4135"], Germany: ["#ffce00", "#dd0000", "#000000"],
+  Japan: ["#ffffff", "#bc002d", "#223049"], Mexico: ["#006847", "#ffffff", "#ce1126"],
+  Morocco: ["#c1272d", "#006233", "#ffffff"], Netherlands: ["#ff6f1a", "#ffffff", "#21468b"],
+  Portugal: ["#006600", "#ff0000", "#ffcc00"], Spain: ["#aa151b", "#f1bf00", "#ffffff"],
+  "South Korea": ["#ffffff", "#c60c30", "#003478"], "United States": ["#3c3b6e", "#b22234", "#ffffff"],
+  Uruguay: ["#75aadb", "#ffffff", "#fcd116"]
+};
+
+const fallbackTheme = ["#11c58d", "#f8cf52", "#d92945"];
+
 const statLabels = {
   possessionPct: "Possession",
   totalShots: "Shots",
@@ -161,12 +193,19 @@ const els = {
   brandMark: document.getElementById("brandMark"),
   brandSubtitle: document.getElementById("brandSubtitle"),
   favoriteSelect: document.getElementById("favoriteTeamSelect"),
+  compactButton: document.getElementById("compactModeButton"),
+  alertKickoff: document.getElementById("kickoffAlerts"),
+  alertGoals: document.getElementById("goalAlerts"),
+  alertFinal: document.getElementById("finalAlerts"),
+  alertRed: document.getElementById("redCardAlerts"),
   dialog: document.getElementById("matchDialog"),
   dialogBody: document.getElementById("matchDialogBody")
 };
 
 recalculateStandings();
 initFavoriteSelect();
+initPreferenceControls();
+applyCompactMode(state.compactMode);
 render();
 scheduleNextRefresh(randomMs(INITIAL_REFRESH_MIN_MS, INITIAL_REFRESH_MAX_MS));
 
@@ -189,7 +228,25 @@ els.favoriteSelect.addEventListener("change", (event) => {
   if (state.favoriteTeam) localStorage.setItem("favoriteTeam", state.favoriteTeam);
   else localStorage.removeItem("favoriteTeam");
   updateFavoriteIdentity();
+  applyFavoriteTheme();
   render();
+});
+
+els.compactButton.addEventListener("click", () => {
+  applyCompactMode(!state.compactMode);
+});
+
+[
+  ["kickoff", els.alertKickoff],
+  ["goals", els.alertGoals],
+  ["final", els.alertFinal],
+  ["red", els.alertRed]
+].forEach(([key, input]) => {
+  input.addEventListener("change", () => {
+    state.alerts[key] = input.checked;
+    localStorage.setItem(`alert${titleCase(key)}`, String(input.checked));
+    if (input.checked) requestNotificationPermission();
+  });
 });
 
 els.refresh.addEventListener("click", () => refreshLive({ force: true }));
@@ -236,6 +293,7 @@ async function refreshLive(options = {}) {
       state.liveError = null;
       recalculateStandings(false);
       initFavoriteSelect();
+      maybeNotifyFavoriteEvents(parsed.matches);
       setLiveStatus(payload.fromCache ? "Cached" : "Live", formatDateTime(payload.fetchedAt));
     } else {
       throw new Error("ESPN returned no World Cup events.");
@@ -463,6 +521,15 @@ function initFavoriteSelect() {
   updateFavoriteIdentity();
 }
 
+function initPreferenceControls() {
+  els.alertKickoff.checked = state.alerts.kickoff;
+  els.alertGoals.checked = state.alerts.goals;
+  els.alertFinal.checked = state.alerts.final;
+  els.alertRed.checked = state.alerts.red;
+  els.compactButton.setAttribute("aria-pressed", String(state.compactMode));
+  if (Object.values(state.alerts).some(Boolean)) requestNotificationPermission();
+}
+
 function updateFavoriteIdentity() {
   const favorite = state.favoriteTeam;
   const flag = favorite ? flagUrlForTeam(favorite, "w160") : "";
@@ -472,6 +539,44 @@ function updateFavoriteIdentity() {
   mark?.classList.toggle("is-favorite", Boolean(flag));
   els.brandSubtitle.textContent = favorite || "2026 Matchday";
   els.favoriteSelect.value = favorite;
+  applyFavoriteTheme();
+}
+
+function applyFavoriteTheme() {
+  const [primary, secondary, third] = teamThemes[state.favoriteTeam] || fallbackTheme;
+  document.documentElement.style.setProperty("--team-primary", primary);
+  document.documentElement.style.setProperty("--team-secondary", secondary);
+  document.documentElement.style.setProperty("--team-third", third);
+  document.documentElement.style.setProperty("--trophy", `linear-gradient(90deg, ${primary}, ${secondary}, ${third})`);
+}
+
+function applyCompactMode(enabled) {
+  state.compactMode = enabled;
+  localStorage.setItem("compactMode", String(enabled));
+  document.body.classList.toggle("compact-mode", enabled);
+  els.compactButton.textContent = enabled ? "Full" : "Compact";
+  els.compactButton.setAttribute("aria-pressed", String(enabled));
+  window.worldCup.setCompactMode?.(enabled);
+}
+
+function requestNotificationPermission() {
+  if (!("Notification" in window) || Notification.permission !== "default") return;
+  Notification.requestPermission().catch(() => {});
+}
+
+function showLocalNotification(title, body) {
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  new Notification(title, {
+    body,
+    icon: "assets/soccer-ball.png",
+    silent: false
+  });
+}
+
+function rememberNotification(key) {
+  notifiedEvents.add(key);
+  while (notifiedEvents.size > 300) notifiedEvents.delete(notifiedEvents.values().next().value);
+  localStorage.setItem("notifiedEvents", JSON.stringify([...notifiedEvents]));
 }
 
 function renderSummary() {
@@ -665,11 +770,13 @@ function matchCard(match, showDetails) {
   const card = div(`match-card ${match.statusState === "in" ? "is-live" : ""}`);
   card.tabIndex = 0;
   const scoring = match.goals.map((goal) => `${goal.minute} ${goal.athlete || goal.team}`).join(", ");
+  const badges = matchImportanceBadges(match);
   card.innerHTML = `
     <div class="match-meta">
       <span>${escapeHtml(match.stage)}${match.group ? ` / Group ${match.group}` : ""}</span>
       <strong>${escapeHtml(match.status)}</strong>
     </div>
+    ${badges.length ? `<div class="match-badges">${badges.map((badge) => `<span>${escapeHtml(badge)}</span>`).join("")}</div>` : ""}
     <div class="teams">
       ${teamLine(match.home, match.homeLogo, match.homeScore, match.homeAbbr)}
       ${teamLine(match.away, match.awayLogo, match.awayScore, match.awayAbbr)}
@@ -744,6 +851,8 @@ function favoriteTeamPanel() {
   const latest = matches.filter((match) => match.completed).at(-1);
   const feature = live || next || latest;
   const standing = favoriteTeamStanding();
+  const scorer = favoriteTeamTopScorer();
+  const cardWatch = favoriteTeamCardWatch();
   return `
     <article class="favorite-team-card">
       <span>Following</span>
@@ -754,6 +863,8 @@ function favoriteTeamPanel() {
       <div class="favorite-team-details">
         <p><b>${feature ? favoriteMatchLabel(feature) : "Schedule pending"}</b><small>${feature ? favoriteMatchDetail(feature) : "Waiting for match data"}</small></p>
         <p><b>${standing ? `Group ${standing.group}` : "Group"}</b><small>${standing ? `${standing.pts} pts / GD ${standing.gd > 0 ? `+${standing.gd}` : standing.gd}` : "Not available yet"}</small></p>
+        <p><b>Top scorer</b><small>${escapeHtml(scorer ? `${scorer.name} / ${scorer.goals}` : "No goals yet")}</small></p>
+        <p><b>Card watch</b><small>${escapeHtml(cardWatch ? `${cardWatch.name} / ${cardWatch.detail}` : "No cards yet")}</small></p>
       </div>
     </article>
   `;
@@ -1008,6 +1119,77 @@ function favoriteMatchDetail(match) {
   const opponent = match.home === state.favoriteTeam ? match.away : match.home;
   const score = match.completed || match.statusState === "in" ? ` / ${scoreText(match)}` : "";
   return `${opponent}${score} / ${formatMatchDate(match.date)} ${match.time}`;
+}
+
+function favoriteTeamTopScorer() {
+  if (!state.favoriteTeam) return null;
+  const totals = new Map();
+  state.matches.forEach((match) => {
+    match.goals.filter((goal) => goal.team === state.favoriteTeam).forEach((goal) => {
+      const name = goal.athlete || "Unknown scorer";
+      totals.set(name, (totals.get(name) || 0) + 1);
+    });
+  });
+  const [name, goals] = [...totals.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0] || [];
+  return name ? { name, goals: `${goals} goal${goals === 1 ? "" : "s"}` } : null;
+}
+
+function favoriteTeamCardWatch() {
+  if (!state.favoriteTeam) return null;
+  const totals = new Map();
+  state.matches.forEach((match) => {
+    match.cards.filter((card) => card.team === state.favoriteTeam).forEach((card) => {
+      const name = card.athlete || "Unknown";
+      const entry = totals.get(name) || { name, yellow: 0, red: 0 };
+      if (card.kind === "yellow") entry.yellow += 1;
+      if (card.kind === "red") entry.red += 1;
+      totals.set(name, entry);
+    });
+  });
+  return [...totals.values()]
+    .sort((a, b) => (b.red * 2 + b.yellow) - (a.red * 2 + a.yellow) || a.name.localeCompare(b.name))
+    .map((item) => ({ ...item, detail: `${item.yellow}Y / ${item.red}R` }))[0] || null;
+}
+
+function matchImportanceBadges(match) {
+  const badges = [];
+  if (match.statusState === "in") badges.push("Live");
+  if (match.completed) badges.push("Final");
+  if (!match.group || match.completed) return badges;
+  [match.home, match.away].forEach((team) => {
+    const row = state.standings[match.group]?.find((item) => item.team === team);
+    if (!row || row.played < 1) return;
+    if (row.pts >= 4) badges.push(`${codeForTeam(team)} can clinch`);
+    if (row.pts <= 1 && row.played >= 2) badges.push(`${codeForTeam(team)} must win`);
+  });
+  return [...new Set(badges)].slice(0, 3);
+}
+
+function maybeNotifyFavoriteEvents(matches) {
+  if (!notificationsReady) {
+    notificationsReady = true;
+    return;
+  }
+  if (!state.favoriteTeam || !Object.values(state.alerts).some(Boolean)) return;
+  matches
+    .filter((match) => match.home === state.favoriteTeam || match.away === state.favoriteTeam)
+    .forEach((match) => {
+      const opponent = match.home === state.favoriteTeam ? match.away : match.home;
+      notifyOnce(state.alerts.kickoff && match.statusState === "in", `kickoff:${match.id}`, `${state.favoriteTeam} is live`, `${state.favoriteTeam} vs ${opponent} has kicked off.`);
+      notifyOnce(state.alerts.final && match.completed, `final:${match.id}`, `${state.favoriteTeam} final`, `${match.home} ${scoreText(match)} ${match.away}`);
+      match.goals.filter((goal) => goal.team === state.favoriteTeam).forEach((goal, index) => {
+        notifyOnce(state.alerts.goals, `goal:${match.id}:${goal.minute}:${goal.athlete || index}`, `${state.favoriteTeam} goal`, `${goal.minute || ""} ${goal.athlete || state.favoriteTeam}`.trim());
+      });
+      match.cards.filter((card) => card.kind === "red" && card.team === state.favoriteTeam).forEach((card, index) => {
+        notifyOnce(state.alerts.red, `red:${match.id}:${card.minute}:${card.athlete || index}`, `${state.favoriteTeam} red card`, `${card.minute || ""} ${card.athlete || state.favoriteTeam}`.trim());
+      });
+    });
+}
+
+function notifyOnce(shouldNotify, key, title, body) {
+  if (!shouldNotify || notifiedEvents.has(key)) return;
+  rememberNotification(key);
+  showLocalNotification(title, body);
 }
 
 function rankedScorers() {

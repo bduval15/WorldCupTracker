@@ -31,6 +31,28 @@
             <option value="">Choose a team</option>
           </select>
         </label>
+        <section class="sidebar-panel">
+          <div class="sidebar-panel-head">
+            <span>Match alerts</span>
+            <button id="compactModeButton" class="icon-action" type="button" aria-pressed="false">Compact</button>
+          </div>
+          <label class="toggle-row">
+            <input id="kickoffAlerts" type="checkbox">
+            <span>Kickoff</span>
+          </label>
+          <label class="toggle-row">
+            <input id="goalAlerts" type="checkbox">
+            <span>Goals</span>
+          </label>
+          <label class="toggle-row">
+            <input id="finalAlerts" type="checkbox">
+            <span>Final score</span>
+          </label>
+          <label class="toggle-row">
+            <input id="redCardAlerts" type="checkbox">
+            <span>Red cards</span>
+          </label>
+        </section>
         <div class="live-card">
           <span class="pulse" aria-hidden="true"></span>
           <div>

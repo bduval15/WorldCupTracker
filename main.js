@@ -121,3 +121,15 @@ ipcMain.handle("open-external", async (_event, url) => {
     await shell.openExternal(url);
   }
 });
+
+ipcMain.handle("set-compact-mode", async (event, compact) => {
+  const window = BrowserWindow.fromWebContents(event.sender);
+  if (!window) return;
+  if (compact) {
+    window.setMinimumSize(420, 520);
+    window.setSize(460, 680, true);
+  } else {
+    window.setMinimumSize(920, 620);
+    window.setSize(1180, 780, true);
+  }
+});
