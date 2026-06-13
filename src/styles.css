@@ -296,6 +296,10 @@ button, input, select { font: inherit; }
 .sidebar-live-events li.yellow span { color: var(--yellow); }
 .sidebar-live-events li.red span { color: var(--red); }
 .sidebar-live-events li.sub span { color: var(--blue); }
+.sidebar-live-events li.save span,
+.sidebar-live-events li.shotOn span,
+.sidebar-live-events li.shotOff span,
+.sidebar-live-events li.shotBlocked span { color: var(--blue); }
 
 .live-card {
   margin-top: 0;
@@ -1578,6 +1582,10 @@ dialog form {
 .event-list.dense li.goal::before { background: var(--green); box-shadow: 0 0 0 4px rgba(18, 184, 134, .14); }
 .event-list.dense li.yellow::before { background: var(--yellow); box-shadow: 0 0 0 4px rgba(247, 201, 72, .14); }
 .event-list.dense li.red::before { background: var(--red); box-shadow: 0 0 0 4px rgba(227, 61, 79, .14); }
+.event-list.dense li.save::before,
+.event-list.dense li.shotOn::before,
+.event-list.dense li.shotOff::before,
+.event-list.dense li.shotBlocked::before { background: var(--blue); box-shadow: 0 0 0 4px rgba(57, 167, 255, .12); }
 .event-list.dense li > span {
   color: #dbeafe;
   font-size: 13px;
@@ -1606,10 +1614,18 @@ dialog form {
 .event-list .yellow { border-left: 5px solid var(--yellow); }
 .event-list .red { border-left: 5px solid var(--red); }
 .event-list .sub { border-left: 5px solid var(--blue); }
+.event-list .save,
+.event-list .shotOn,
+.event-list .shotOff,
+.event-list .shotBlocked { border-left: 5px solid var(--blue); }
 .event-list.dense .goal,
 .event-list.dense .yellow,
 .event-list.dense .red,
-.event-list.dense .sub {
+.event-list.dense .sub,
+.event-list.dense .save,
+.event-list.dense .shotOn,
+.event-list.dense .shotOff,
+.event-list.dense .shotBlocked {
   border-left: 0;
 }
 

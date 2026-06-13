@@ -270,7 +270,7 @@ async function refreshLive(options = {}) {
       state.liveError = null;
       recalculateStandings(false);
       initFavoriteSelect();
-      setLiveStatus(payload.stale ? "Offline cache" : payload.fromCache ? "Updated" : "Live", formatDateTime(payload.fetchedAt));
+      setLiveStatus(payload.stale ? "Offline data" : "Live", payload.stale ? formatDateTime(payload.fetchedAt) : "");
     } else {
       throw new Error("ESPN returned no World Cup events.");
     }
@@ -392,13 +392,18 @@ function normalizeDetail(detail, competitors = []) {
   const assist = athletes[1] || extractAssistName(detail.text || detail.play?.text || "");
   const detailText = detail.play?.text || detail.text || [athlete, text].filter(Boolean).join(" - ");
   const lower = `${text} ${detailText}`.toLowerCase();
+  const typeLower = text.toLowerCase();
   const ownGoal = /\bown goal\b/.test(lower);
   let kind = "event";
-  if (detail.scoringPlay || lower.includes("goal")) kind = "goal";
+  if (detail.scoringPlay || /\b(own goal|goal)\b/.test(typeLower)) kind = "goal";
   if (!detail.scoringPlay && lower.includes("assist")) kind = "assist";
   if (detail.yellowCard || lower.includes("yellow")) kind = "yellow";
   if (detail.redCard || lower.includes("red card")) kind = "red";
   if (lower.includes("substitution")) kind = "sub";
+  if (kind === "event" && /\battempt saved\b|\bsaved\b/.test(lower)) kind = "save";
+  if (kind === "event" && /\bshot on target\b/.test(lower)) kind = "shotOn";
+  if (kind === "event" && /\bshot off target\b|\battempt missed\b/.test(lower)) kind = "shotOff";
+  if (kind === "event" && /\bshot blocked\b|\battempt blocked\b/.test(lower)) kind = "shotBlocked";
   return {
     kind,
     minute: detail.clock?.displayValue || detail.time?.displayValue || "",
@@ -1103,6 +1108,10 @@ function eventLabel(event) {
   if (event.kind === "yellow") return `Yellow card ${event.athlete || event.team}`;
   if (event.kind === "red") return `Red card ${event.athlete || event.team}`;
   if (event.kind === "sub") return "Substitution";
+  if (event.kind === "save") return `Shot saved ${event.athlete || event.team}`.trim();
+  if (event.kind === "shotOn") return `Shot on target ${event.athlete || event.team}`.trim();
+  if (event.kind === "shotOff") return `Shot off target ${event.athlete || event.team}`.trim();
+  if (event.kind === "shotBlocked") return `Shot blocked ${event.athlete || event.team}`.trim();
   return event.type || event.team || "Event";
 }
 
@@ -1522,8 +1531,10 @@ function searchableText(values) {
 function setLiveStatus(status, detail) {
   els.liveStatus.textContent = status;
   els.liveDetail.textContent = detail;
+  els.liveDetail.hidden = !detail;
   els.compactLiveStatus.textContent = status;
   els.compactLiveDetail.textContent = detail;
+  els.compactLiveDetail.hidden = !detail;
 }
 
 function summaryCard(label, value, detail, action = "") {
