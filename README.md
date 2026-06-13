@@ -32,6 +32,36 @@ Live data is fetched from ESPN's public FIFA World Cup scoreboard and match summ
 
 The app includes client-side safeguards so it does not poll aggressively: live refreshes are jittered, slower when no match is live, paused while the app is hidden, and match summaries are cached. For large public distribution, use a shared cached feed or proxy and set `WORLD_CUP_SCOREBOARD_URL` for builds that should read from that cache instead of sending every installed desktop client directly to ESPN.
 
+## Shared Feed Proxy
+
+For a private build sent to a few friends, the built-in throttling is usually enough. For a public release, deploy the included Cloudflare Worker so all desktop clients read from one cached feed instead of each client calling ESPN directly.
+
+Deploy the proxy:
+
+```powershell
+npm run proxy:deploy
+```
+
+After deployment, Cloudflare will give you a Worker URL like:
+
+```text
+https://world-cup-tracker-feed.YOUR_ACCOUNT.workers.dev
+```
+
+Build the desktop app against that proxy:
+
+```powershell
+$env:WORLD_CUP_SCOREBOARD_URL="https://world-cup-tracker-feed.YOUR_ACCOUNT.workers.dev/scoreboard"
+$env:WORLD_CUP_SUMMARY_URL="https://world-cup-tracker-feed.YOUR_ACCOUNT.workers.dev/summary?event="
+npm run dist
+```
+
+Proxy endpoints:
+
+- `/scoreboard` caches the tournament scoreboard.
+- `/summary?event=EVENT_ID` caches individual match summaries.
+- `/health` returns a simple health check.
+
 ## Disclaimer
 
 This is an unofficial fan-made desktop app. It is not affiliated with, endorsed by, sponsored by, or connected to FIFA, ESPN, any broadcaster, or any national football association.

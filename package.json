@@ -9,7 +9,9 @@
     "test": "node --check main.js && node --check preload.js && node --check src/app.js && node --check src/seed-data.js",
     "pack": "electron-builder --dir",
     "dist": "electron-builder --win --x64",
-    "dist:desktop": "electron-builder --win --x64 --config.directories.output=%USERPROFILE%\\Desktop\\WorldCup2026LiveRelease"
+    "dist:desktop": "electron-builder --win --x64 --config.directories.output=%USERPROFILE%\\Desktop\\WorldCup2026LiveRelease",
+    "proxy:dev": "npx wrangler dev --config proxy/wrangler.toml",
+    "proxy:deploy": "npx wrangler deploy --config proxy/wrangler.toml"
   },
   "keywords": [
     "world-cup",

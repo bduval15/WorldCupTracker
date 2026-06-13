@@ -7,6 +7,7 @@ const ESPN_SUMMARY =
   "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary?event=";
 const ESPN_SOURCE = "https://www.espn.com/soccer/scoreboard/_/league/fifa.world";
 const LIVE_SCOREBOARD = process.env.WORLD_CUP_SCOREBOARD_URL || ESPN_SCOREBOARD;
+const LIVE_SUMMARY = process.env.WORLD_CUP_SUMMARY_URL || ESPN_SUMMARY;
 const SCOREBOARD_CACHE_MS = 120_000;
 const SUMMARY_CACHE_MS = 10 * 60_000;
 const APP_ICON = path.join(__dirname, "src", "assets", "soccer-ball.png");
@@ -105,7 +106,7 @@ ipcMain.handle("fetch-match-summary", async (_event, eventId, options = {}) => {
   if (!/^\d+$/.test(String(eventId))) {
     throw new Error("Invalid ESPN event id");
   }
-  const result = await cachedFetchJson(`summary:${eventId}`, `${ESPN_SUMMARY}${eventId}`, SUMMARY_CACHE_MS, Boolean(options.force));
+  const result = await cachedFetchJson(`summary:${eventId}`, `${LIVE_SUMMARY}${eventId}`, SUMMARY_CACHE_MS, Boolean(options.force));
   return {
     data: result.data,
     sourceName: result.fromCache ? "Cached match summary" : "ESPN match summary",
