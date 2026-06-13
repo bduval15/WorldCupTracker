@@ -1,66 +1,97 @@
 # World Cup 2026 Live
 
-A Windows desktop app for following the FIFA World Cup 2026 from one live dashboard. It includes match cards, groups, standings, knockout bracket paths, search, scores, match stats, goals, cards, broadcasts, and event timelines while the app is open.
+A Windows desktop app for following the FIFA World Cup 2026 from one live dashboard.
+
+World Cup 2026 Live includes live match cards, group tables, standings, bracket paths, team favorites, match alerts, player and team stats, timelines, goals, cards, and match detail pages.
 
 ## Download
 
-Download the latest Windows build from the GitHub Releases page:
+Download the latest Windows build from GitHub Releases:
 
 ```text
 https://github.com/bduval15/WorldCupTracker/releases
 ```
 
-Use one of the release assets:
+Choose one of the release assets:
 
 - `World Cup 2026 Live Setup 1.0.0.exe` installs the app and creates shortcuts.
-- `World Cup 2026 Live 1.0.0.exe` runs as a portable app with no install step.
+- `World Cup 2026 Live 1.0.0.exe` runs as a portable app without installing.
 
 ## Features
 
-- Live score sync while the app is open.
-- Today view with top scorers, group leaders, next kickoff, and latest result.
-- Match Center with filtering and searchable teams, players, and matches.
-- Group tables for all 12 World Cup groups.
-- Official knockout bracket path ordering from Round of 32 through the final.
-- Match detail modal with stats, goals, cards, broadcasts, officials, and timeline.
-- Dark World Cup themed interface with team flags and soccer ball app icon.
-- Offline fallback data when the live source cannot be reached.
+- Live score updates while the app is open.
+- Home dashboard with Golden Boot, next kickoff, latest result, followed team, group leaders, and today's matches.
+- Match Center with filters, search, live status, score summaries, cards, goals, and event previews.
+- Dedicated Stats page for player goals, team goals, assists, yellow cards, red cards, and team standings.
+- Groups page with all 12 group tables.
+- Knockout bracket view from Round of 32 through the final.
+- Match detail pages with live score, kickoff, location, officials, ESPN match link, stats, key events, and timeline.
+- Favorite team selection with team-themed colors and quick team summary.
+- Optional match alerts for kickoff, goals, final score, and red cards.
+- Compact mode for a smaller desktop view.
+- Offline fallback data if the live feed is unavailable.
 
-## Data Source
+## How To Use
 
-Live data is fetched from ESPN's public FIFA World Cup scoreboard and match summary endpoints. If the live source is unavailable, the app falls back to bundled tournament data.
+1. Download either the installer or portable `.exe` from the Releases page.
+2. Open the app.
+3. Pick a favorite team from the sidebar if you want team-themed colors and quick team tracking.
+4. Use `Update` to request the latest feed manually, or leave the app open for automatic refreshes.
+5. Click any match card, live sidebar match, next kickoff card, or latest result card to open match details.
 
-The app includes client-side safeguards so it does not poll aggressively: live refreshes are jittered, slower when no match is live, paused while the app is hidden, and match summaries are cached briefly. For large public distribution, use a shared cached feed or proxy and set `WORLD_CUP_SCOREBOARD_URL` for builds that should read from that cache instead of sending every installed desktop client directly to ESPN.
+## Live Data
 
-## Shared Feed Proxy
+Live data is fetched from public ESPN FIFA World Cup scoreboard and match summary endpoints. If the live source is unavailable, the app falls back to bundled tournament data.
 
-For a private build sent to a few friends, the built-in throttling is usually enough. For a public release, deploy the included Cloudflare Worker so all desktop clients read from one shared cached feed instead of each client calling ESPN directly. The Worker is configured for near-live updates with a short scoreboard cache and a short match-summary cache.
+The app uses short local caches and jittered refresh intervals to avoid excessive polling. During live matches, the app refreshes much more often than it does when no match is live.
 
-Deploy the proxy:
+Public release builds may use a shared cached feed so app users can receive near-live updates without every desktop client calling the upstream data source directly.
+
+## Privacy
+
+World Cup 2026 Live does not require an account and does not collect analytics. Favorite team, compact mode, alert preferences, and already-shown notification IDs are stored locally on your device using browser local storage inside the Electron app.
+
+## Build From Source
+
+Requirements:
+
+- Windows 10 or newer
+- Node.js 20 or newer
+- npm
+
+Clone and install:
 
 ```powershell
-npm run proxy:deploy
+git clone https://github.com/bduval15/WorldCupTracker.git
+cd WorldCupTracker
+npm install
 ```
 
-After deployment, Cloudflare will give you a Worker URL like:
-
-```text
-https://world-cup-tracker-feed.YOUR_ACCOUNT.workers.dev
-```
-
-Build the desktop app against that proxy:
+Run from source:
 
 ```powershell
-$env:WORLD_CUP_SCOREBOARD_URL="https://world-cup-tracker-feed.YOUR_ACCOUNT.workers.dev/scoreboard"
-$env:WORLD_CUP_SUMMARY_URL="https://world-cup-tracker-feed.YOUR_ACCOUNT.workers.dev/summary?event="
+npm start
+```
+
+Run validation:
+
+```powershell
+npm test
+```
+
+Build the installer and portable `.exe` files:
+
+```powershell
 npm run dist
 ```
 
-Proxy endpoints:
+Generated builds are written to the project `release` folder. Do not commit generated `.exe` files to the repository; attach them to a GitHub Release instead.
 
-- `/scoreboard` caches the tournament scoreboard for about 15 seconds.
-- `/summary?event=EVENT_ID` caches individual match summaries for about 45 seconds.
-- `/health` returns a simple health check.
+## Tech Stack
+
+- Electron
+- Vanilla HTML, CSS, and JavaScript
+- Electron Builder
 
 ## Disclaimer
 
@@ -69,73 +100,6 @@ This is an unofficial fan-made desktop app. It is not affiliated with, endorsed 
 Team names, competition names, logos, flags, trademarks, and other sports-related identifiers belong to their respective owners. Live match data comes from third-party public endpoints and may be delayed, incomplete, unavailable, or inaccurate. This app is provided for informational and personal use only.
 
 The software is provided "as is" without warranty of any kind. See the MIT License for the full license and warranty disclaimer.
-
-## Build Your Own Copy
-
-Requirements:
-
-- Windows 10 or newer
-- Node.js 20 or newer
-- npm
-
-Clone the repository and install dependencies:
-
-```powershell
-git clone https://github.com/bduval15/WorldCupTracker.git
-cd WorldCupTracker
-npm install
-```
-
-Run it from source:
-
-```powershell
-npm start
-```
-
-Build installer and portable `.exe` files:
-
-```powershell
-npm run dist
-```
-
-The generated files will be in:
-
-```powershell
-release
-```
-
-If Windows or OneDrive blocks the project `release` folder during packaging, build to your Desktop instead:
-
-```powershell
-npm run dist:desktop
-```
-
-The generated files will be in:
-
-```powershell
-%USERPROFILE%\Desktop\WorldCup2026LiveRelease
-```
-
-Use either generated file:
-
-- `World Cup 2026 Live Setup 1.0.0.exe`
-- `World Cup 2026 Live 1.0.0.exe`
-
-Do not commit the generated `.exe` files to the repository. Upload them to GitHub Releases instead.
-
-## Validate
-
-Run syntax checks before committing or releasing:
-
-```powershell
-npm test
-```
-
-## Tech Stack
-
-- Electron
-- Vanilla HTML, CSS, and JavaScript
-- Electron Builder for Windows packaging
 
 ## License
 
