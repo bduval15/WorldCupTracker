@@ -7,12 +7,15 @@ const LIVE_REFRESH_MIN_MS = 15_000;
 const LIVE_REFRESH_MAX_MS = 25_000;
 const SUMMARY_LIVE_MS = 30_000;
 const SUMMARY_FINAL_MS = 12 * 60 * 60_000;
+const PROJECT_URL = "https://github.com/bduval15/WorldCupTracker";
 const summaryFetchedAt = new Map();
 let refreshTimer = null;
 let refreshInFlight = false;
+const savedView = localStorage.getItem("lastView");
+const initialView = ["today", "matches", "stats", "groups", "bracket"].includes(savedView) ? savedView : "today";
 
 const state = {
-  view: "today",
+  view: initialView,
   statsTab: "playerGoals",
   query: "",
   matchGroupFilter: "",
@@ -22,6 +25,7 @@ const state = {
   source: "Bundled fallback",
   sourceUrl: "",
   lastUpdated: null,
+  appInfo: { name: "World Cup 2026 Live", version: "1.0.0" },
   liveError: null,
   groups: structuredClone(window.SEED_DATA.groups),
   standings: {},
@@ -183,6 +187,7 @@ const els = {
   favoriteSelect: document.getElementById("favoriteTeamSelect"),
   compactButton: document.getElementById("compactModeButton"),
   compactNavButton: document.getElementById("compactNavButton"),
+  aboutButton: document.getElementById("aboutButton"),
   dialog: document.getElementById("matchDialog"),
   dialogBody: document.getElementById("matchDialogBody")
 };
@@ -191,16 +196,14 @@ recalculateStandings();
 initFavoriteSelect();
 initPreferenceControls();
 applyCompactMode(state.compactMode);
+loadAppInfo();
 render();
 scheduleNextRefresh(randomMs(INITIAL_REFRESH_MIN_MS, INITIAL_REFRESH_MAX_MS));
 
 document.querySelectorAll(".nav-button").forEach((button) => {
   if (!button.dataset.view) return;
   button.addEventListener("click", () => {
-    document.querySelectorAll(".nav-button[data-view]").forEach((item) => item.classList.remove("active"));
-    button.classList.add("active");
-    state.view = button.dataset.view;
-    render();
+    setView(button.dataset.view);
   });
 });
 
@@ -227,6 +230,7 @@ els.compactNavButton.addEventListener("click", () => {
 });
 
 els.refresh.addEventListener("click", () => refreshLive({ force: true }));
+els.aboutButton.addEventListener("click", openAboutDialog);
 
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
@@ -256,7 +260,7 @@ function randomMs(min, max) {
 async function refreshLive(options = {}) {
   if (refreshInFlight) return;
   refreshInFlight = true;
-  setLiveStatus("Syncing", "ESPN live");
+  setLiveStatus("Updating", "");
   try {
     const payload = await window.worldCup.fetchLive({ force: Boolean(options.force) });
     const parsed = parseEspnScoreboard(payload.data);
@@ -454,6 +458,42 @@ async function openMatch(match) {
   }
 }
 
+function openAboutDialog() {
+  const updated = state.lastUpdated ? formatDateTime(state.lastUpdated) : "Not updated yet";
+  const source = state.liveError ? "Offline fallback" : "Live feed";
+  els.dialogBody.innerHTML = `
+    <div class="dialog-header about-dialog">
+      <div>
+        <p class="eyebrow">World Cup 2026 Live</p>
+        <h2>About</h2>
+        <p class="dialog-subtitle">Version ${escapeHtml(state.appInfo.version || "1.0.0")}</p>
+      </div>
+      <button class="dialog-link" type="button" data-url="${PROJECT_URL}">GitHub</button>
+    </div>
+    <section class="about-grid">
+      <article>
+        <span>Updates</span>
+        <strong>${escapeHtml(source)}</strong>
+        <small>${escapeHtml(updated)}</small>
+      </article>
+      <article>
+        <span>Privacy</span>
+        <strong>Local preferences</strong>
+        <small>Favorite team, compact mode, and last view stay on this device.</small>
+      </article>
+      <article>
+        <span>Data</span>
+        <strong>World Cup coverage</strong>
+        <small>Scores, stats, groups, bracket, and match details update while the app is open.</small>
+      </article>
+    </section>
+  `;
+  els.dialogBody.querySelector(".dialog-link[data-url]")?.addEventListener("click", (event) => {
+    window.worldCup.openExternal(event.currentTarget.dataset.url);
+  });
+  els.dialog.showModal();
+}
+
 async function refreshSelectedMatch(button) {
   if (!state.selectedMatch?.id) return;
   if (button) {
@@ -505,8 +545,25 @@ function uniqueEvents(events) {
   });
 }
 
+function setView(view) {
+  if (!viewTitles[view]) return;
+  state.view = view;
+  localStorage.setItem("lastView", view);
+  render();
+}
+
+async function loadAppInfo() {
+  try {
+    const info = await window.worldCup.getAppInfo?.();
+    if (info?.version) state.appInfo = info;
+  } catch {
+    state.appInfo = { name: "World Cup 2026 Live", version: "1.0.0" };
+  }
+}
+
 function render() {
   els.title.textContent = viewTitles[state.view];
+  updateNavUi();
   updateFavoriteIdentity();
   updateSearchUi();
   renderSidebarLiveMatch();
@@ -514,6 +571,13 @@ function render() {
   const renderers = { today: renderToday, matches: renderMatches, stats: renderStats, groups: renderGroups, bracket: renderBracket };
   els.root.innerHTML = "";
   els.root.appendChild(renderers[state.view]());
+  bindFavoritePanel();
+}
+
+function updateNavUi() {
+  document.querySelectorAll(".nav-button[data-view]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.view === state.view);
+  });
 }
 
 function renderSidebarLiveMatch() {
@@ -819,11 +883,29 @@ function bracketLegend() {
 function matchGrid(matches, showDetails) {
   const grid = div("match-grid");
   if (!matches.length) {
-    grid.innerHTML = `<div class="empty">No matches match the current search.</div>`;
+    grid.append(emptyMatchesState());
     return grid;
   }
   matches.forEach((match) => grid.append(matchCard(match, showDetails)));
   return grid;
+}
+
+function emptyMatchesState() {
+  const empty = div("empty action-empty");
+  const hasFilters = Boolean(state.query || state.matchGroupFilter || state.matchStatusFilter !== "all");
+  empty.innerHTML = `
+    <strong>No matches found</strong>
+    <span>${hasFilters ? "Try clearing the current search and filters." : "There are no matches in this section yet."}</span>
+    ${hasFilters ? `<button class="action-button" type="button">Clear filters</button>` : ""}
+  `;
+  empty.querySelector("button")?.addEventListener("click", () => {
+    state.query = "";
+    state.matchGroupFilter = "";
+    state.matchStatusFilter = "all";
+    els.search.value = "";
+    render();
+  });
+  return empty;
 }
 
 function matchCard(match, showDetails) {
@@ -831,6 +913,7 @@ function matchCard(match, showDetails) {
   card.tabIndex = 0;
   const scoring = match.goals.map(goalScoringText).join(", ");
   const badges = matchImportanceBadges(match);
+  const story = matchStoryLine(match);
   card.innerHTML = `
     <div class="match-meta">
       <span>${escapeHtml(match.stage)}${match.group ? ` / Group ${match.group}` : ""}</span>
@@ -849,6 +932,7 @@ function matchCard(match, showDetails) {
       <span>${match.cards.filter((card) => card.kind === "yellow").length} yellow</span>
       <span>${match.cards.filter((card) => card.kind === "red").length} red</span>
     </div>` : ""}
+    ${story ? `<p class="match-story">${escapeHtml(story)}</p>` : ""}
     ${scoring ? `<p class="scorers">${escapeHtml(scoring)}</p>` : ""}
   `;
   card.addEventListener("click", () => openMatch(match));
@@ -868,6 +952,30 @@ function teamLine(name, logo, score, abbr = "") {
 
 function goalScoringText(goal) {
   return `${goal.minute} ${goal.athlete || goal.team}${goal.ownGoal ? " (OG)" : ""}`;
+}
+
+function matchStoryLine(match) {
+  const stories = [];
+  const reds = match.cards.filter((card) => card.kind === "red").length;
+  const yellows = match.cards.filter((card) => card.kind === "yellow").length;
+  const ownGoals = match.goals.filter((goal) => goal.ownGoal).length;
+  const topScorer = topMatchScorer(match);
+  if (topScorer && topScorer.goals > 1) stories.push(`${topScorer.name} ${topScorer.goals} goals`);
+  if (ownGoals) stories.push(`${ownGoals} own goal${ownGoals === 1 ? "" : "s"}`);
+  if (reds) stories.push(`${reds} red card${reds === 1 ? "" : "s"}`);
+  else if (yellows >= 5) stories.push(`${yellows} yellow cards`);
+  return stories.slice(0, 2).join(" / ");
+}
+
+function topMatchScorer(match) {
+  const totals = new Map();
+  match.goals.filter((goal) => !goal.ownGoal).forEach((goal) => {
+    const name = goal.athlete || goal.team;
+    if (!name) return;
+    totals.set(name, (totals.get(name) || 0) + 1);
+  });
+  const [name, goals] = [...totals.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0] || [];
+  return name ? { name, goals } : null;
 }
 
 function badgeClass(label) {
@@ -925,7 +1033,7 @@ function favoriteTeamPanel() {
   const remaining = matches.filter((match) => !match.completed).length;
   const latestText = latest ? `${latest.home} ${scoreText(latest)} ${latest.away}` : "No result yet";
   return `
-    <article class="favorite-team-card">
+    <article class="favorite-team-card"${feature?.id ? ` data-favorite-match-id="${escapeHtml(feature.id)}"` : ""}>
       <span>Following</span>
       <div class="favorite-team-main">
         <div class="favorite-team-head">
@@ -949,6 +1057,23 @@ function favoriteTeamPanel() {
       </div>
     </article>
   `;
+}
+
+function bindFavoritePanel() {
+  const card = els.root.querySelector(".favorite-team-card[data-favorite-match-id]");
+  if (!card) return;
+  const match = state.matches.find((item) => item.id === card.dataset.favoriteMatchId);
+  if (!match) return;
+  card.tabIndex = 0;
+  card.setAttribute("role", "button");
+  card.setAttribute("aria-label", `Open ${state.favoriteTeam} match details`);
+  card.addEventListener("click", () => openMatch(match));
+  card.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openMatch(match);
+    }
+  });
 }
 
 function leaderList(items, limit = 4) {

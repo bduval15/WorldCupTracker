@@ -324,6 +324,23 @@ button, input, select { font: inherit; }
   font-size: 12px;
 }
 
+.about-button {
+  width: 100%;
+  border: 1px solid rgba(142, 164, 191, .28);
+  border-radius: 8px;
+  padding: 9px 10px;
+  background: rgba(6, 17, 29, .5);
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 850;
+}
+
+.about-button:hover,
+.about-button:focus {
+  border-color: rgba(248, 207, 82, .5);
+  color: #fff;
+}
+
 .compact-feed-status {
   display: none;
 }
@@ -709,6 +726,14 @@ input[type="search"]:disabled {
   line-height: 1.4;
 }
 
+.match-story {
+  margin: 0;
+  color: #fff4c2;
+  font-size: 13px;
+  font-weight: 850;
+  line-height: 1.35;
+}
+
 .pulse-panel {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -744,6 +769,16 @@ input[type="search"]:disabled {
   gap: 12px;
   position: relative;
   overflow: hidden;
+}
+
+.favorite-team-card[data-favorite-match-id] {
+  cursor: pointer;
+}
+
+.favorite-team-card[data-favorite-match-id]:hover,
+.favorite-team-card[data-favorite-match-id]:focus {
+  border-color: rgba(248, 207, 82, .5);
+  box-shadow: inset 0 0 0 1px rgba(248, 207, 82, .12), 0 14px 34px rgba(0, 0, 0, .2);
 }
 
 .favorite-team-card::before {
@@ -1369,6 +1404,21 @@ th:nth-child(2), td:nth-child(2) { text-align: left; }
   border: 1px dashed var(--line);
   border-radius: 8px;
 }
+
+.action-empty {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+.action-empty strong {
+  color: #fff;
+}
+
+.action-empty .action-button {
+  margin-top: 2px;
+}
+
 .empty.small {
   padding: 12px;
 }
@@ -1517,6 +1567,37 @@ dialog form {
   gap: 10px;
 }
 
+.about-dialog {
+  align-items: start;
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.about-grid article {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(12, 30, 43, .72);
+}
+
+.about-grid span {
+  color: var(--gold);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.about-grid small {
+  color: var(--muted);
+  line-height: 1.35;
+}
+
 .stats-table th, .stats-table td {
   text-align: center;
 }
@@ -1641,6 +1722,10 @@ dialog form {
 
 @media (max-width: 720px) {
   .dialog-header {
+    grid-template-columns: 1fr;
+  }
+
+  .about-grid {
     grid-template-columns: 1fr;
   }
 
