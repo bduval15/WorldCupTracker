@@ -862,7 +862,7 @@ function favoriteTeamPanel() {
       <span>Following</span>
       <div class="favorite-team-main">
         <div class="favorite-team-head">
-          ${teamBadge(state.favoriteTeam)}
+          ${teamBadge(state.favoriteTeam, "", "", "w160")}
           <strong>${escapeHtml(state.favoriteTeam)}</strong>
         </div>
         <div class="favorite-team-stat-grid">
@@ -1601,8 +1601,8 @@ function flagUrlForTeam(team, size = "w80") {
   return code ? `https://flagcdn.com/${size}/${code}.png` : "";
 }
 
-function teamBadge(name, logo = "", abbr = "") {
-  const flag = flagUrlForTeam(name);
+function teamBadge(name, logo = "", abbr = "", flagSize = "w80") {
+  const flag = flagUrlForTeam(name, flagSize);
   if (flag) return `<img class="flag-img" src="${escapeHtml(flag)}" alt="">`;
   if (logo) return `<img src="${escapeHtml(logo)}" alt="">`;
   return `<span class="team-code">${escapeHtml(abbr || codeForTeam(name))}</span>`;
