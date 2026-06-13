@@ -860,15 +860,17 @@ function favoriteTeamPanel() {
   return `
     <article class="favorite-team-card">
       <span>Following</span>
-      <div class="favorite-team-head">
-        ${teamBadge(state.favoriteTeam)}
-        <strong>${escapeHtml(state.favoriteTeam)}</strong>
-      </div>
-      <div class="favorite-team-stat-grid">
-        <p class="record-stat"><b>${escapeHtml(record)}</b><small>Record</small></p>
-        <p><b>${standing?.pts ?? 0}</b><small>Pts</small></p>
-        <p><b>${standing?.gf ?? 0}</b><small>GF</small></p>
-        <p><b>${standing?.ga ?? 0}</b><small>GA</small></p>
+      <div class="favorite-team-main">
+        <div class="favorite-team-head">
+          ${teamBadge(state.favoriteTeam)}
+          <strong>${escapeHtml(state.favoriteTeam)}</strong>
+        </div>
+        <div class="favorite-team-stat-grid">
+          <p class="record-stat"><b>${escapeHtml(record)}</b><small>Record</small></p>
+          <p><b>${standing?.pts ?? 0}</b><small>Pts</small></p>
+          <p><b>${standing?.gf ?? 0}</b><small>GF</small></p>
+          <p><b>${standing?.ga ?? 0}</b><small>GA</small></p>
+        </div>
       </div>
       <div class="favorite-team-details">
         <p><b>${feature ? favoriteMatchLabel(feature) : "Schedule pending"}</b><small>${feature ? favoriteMatchDetail(feature) : "Waiting for match data"}</small></p>
