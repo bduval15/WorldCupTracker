@@ -880,9 +880,9 @@ function favoriteTeamPanel() {
       <div class="favorite-team-details">
         <p><b>${feature ? favoriteMatchLabel(feature) : "Schedule pending"}</b><small>${feature ? favoriteMatchDetail(feature) : "Waiting for match data"}</small></p>
         <p><b>${standing ? `Group ${standing.group}` : "Group"}</b><small>${standing ? `${standing.played} played / GD ${standing.gd > 0 ? `+${standing.gd}` : standing.gd}` : "Not available yet"}</small></p>
-        <p><b>Latest</b><small>${escapeHtml(latestText)}</small></p>
+        <p class="wide-detail"><b>Latest</b><small>${escapeHtml(latestText)}</small></p>
         <p><b>Remaining</b><small>${remaining} match${remaining === 1 ? "" : "es"}</small></p>
-        <p><b>Top scorer</b><small>${escapeHtml(scorer ? `${scorer.name} / ${scorer.goals}` : "No goals yet")}</small></p>
+        <p class="wide-detail"><b>Top scorer</b><small>${scorer ? `${escapeHtml(scorer.name)}<span>${escapeHtml(`${scorer.goals} goal${scorer.goals === 1 ? "" : "s"}`)}</span>` : "No goals yet"}</small></p>
         <p><b>Card watch</b><small>${escapeHtml(cardWatch ? `${cardWatch.name} / ${cardWatch.detail}` : "No cards yet")}</small></p>
       </div>
     </article>
