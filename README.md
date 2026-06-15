@@ -6,11 +6,7 @@ World Cup 2026 Live includes live match cards, group tables, standings, bracket 
 
 ## Download
 
-Download the latest Windows build from GitHub Releases:
-
-```text
-https://github.com/bduval15/WorldCupTracker/releases
-```
+Download the latest Windows build from the [GitHub Releases page](https://github.com/bduval15/WorldCupTracker/releases).
 
 Choose one of the release assets:
 
@@ -40,11 +36,9 @@ Choose one of the release assets:
 
 ## Live Data
 
-Live data is fetched from public ESPN FIFA World Cup scoreboard and match summary endpoints. If the live source is unavailable, the app falls back to bundled tournament data.
+Live data is routed through a shared cached feed backed by public ESPN FIFA World Cup scoreboard and match summary endpoints. If the live source is unavailable, the app falls back to bundled tournament data.
 
 The app uses short local caches and jittered refresh intervals to avoid excessive polling. During live matches, the app refreshes much more often than it does when no match is live.
-
-Public release builds may use a shared cached feed so app users can receive near-live updates without every desktop client calling the upstream data source directly.
 
 ## Privacy
 
