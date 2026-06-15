@@ -982,6 +982,7 @@ function favoriteTeamPanel() {
   const record = standing ? `${standing.wins}-${standing.draws}-${standing.losses}` : "0-0-0";
   const remaining = matches.filter((match) => !match.completed).length;
   const latestText = latest ? `${latest.home} ${scoreText(latest)} ${latest.away}` : "No result yet";
+  const rank = favoriteTeamGroupRank();
   return `
     <article class="favorite-team-card"${feature?.id ? ` data-favorite-match-id="${escapeHtml(feature.id)}"` : ""}>
       <span>Following</span>
@@ -1003,7 +1004,8 @@ function favoriteTeamPanel() {
         <p class="wide-detail"><b>Latest</b><small>${escapeHtml(latestText)}</small></p>
         <p><b>Remaining</b><small>${remaining} match${remaining === 1 ? "" : "es"}</small></p>
         <p><b>Top scorer</b><small>${scorer ? `${escapeHtml(scorer.name)}<span>${escapeHtml(`${scorer.goals} goal${scorer.goals === 1 ? "" : "s"}`)}</span>` : "No goals yet"}</small></p>
-        <p><b>Card watch</b><small>${escapeHtml(cardWatch ? `${cardWatch.name} / ${cardWatch.detail}` : "No cards yet")}</small></p>
+        <p><b>Card watch</b><small>${cardWatch ? `${escapeHtml(cardWatch.name)}<span>${escapeHtml(cardWatch.detail)}</span>` : "No cards yet"}</small></p>
+        <p><b>Group rank</b><small>${rank ? `#${rank.place} of ${rank.total}` : "Not ranked yet"}</small></p>
       </div>
     </article>
   `;
@@ -1291,6 +1293,14 @@ function favoriteTeamStanding() {
   return null;
 }
 
+function favoriteTeamGroupRank() {
+  const standing = favoriteTeamStanding();
+  if (!standing?.group) return null;
+  const rows = state.standings[standing.group] || [];
+  const index = rows.findIndex((item) => item.team === state.favoriteTeam);
+  return index >= 0 ? { place: index + 1, total: rows.length } : null;
+}
+
 function favoriteMatchLabel(match) {
   if (match.statusState === "in") return "Live now";
   if (match.completed) return "Latest result";
@@ -1319,7 +1329,7 @@ function favoriteTeamTopScorer() {
     });
   });
   const [name, goals] = [...totals.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0] || [];
-  return name ? { name, goals: `${goals} goal${goals === 1 ? "" : "s"}` } : null;
+  return name ? { name, goals } : null;
 }
 
 function favoriteTeamCardWatch() {
@@ -1336,7 +1346,7 @@ function favoriteTeamCardWatch() {
   });
   return [...totals.values()]
     .sort((a, b) => (b.red * 2 + b.yellow) - (a.red * 2 + a.yellow) || a.name.localeCompare(b.name))
-    .map((item) => ({ ...item, detail: `${item.yellow}Y / ${item.red}R` }))[0] || null;
+    .map((item) => ({ ...item, detail: `${item.yellow} yellow / ${item.red} red` }))[0] || null;
 }
 
 function matchImportanceBadges(match) {
