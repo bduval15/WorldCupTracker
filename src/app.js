@@ -654,7 +654,7 @@ function applyCompactMode(enabled) {
 function renderSummary() {
   const metrics = tournamentMetrics();
   els.summary.innerHTML = [
-    summaryCard("Golden boot", metrics.leadingScorer.name, metrics.leadingScorer.detail),
+    summaryCard("Golden boot", displayStatName(metrics.leadingScorer), metrics.leadingScorer.detail),
     summaryCard("Next kickoff", metrics.nextMatch.value, metrics.nextMatch.detail, metrics.nextMatch.match ? "next" : ""),
     summaryCard("Latest result", metrics.latestResult.value, metrics.latestResult.detail, metrics.latestResult.match ? "latest" : "")
   ].join("");
@@ -901,11 +901,25 @@ function teamLine(name, logo, score, abbr = "") {
 }
 
 function goalScoringText(goal) {
-  return `${goal.minute} ${goal.athlete || goal.team}${goal.ownGoal ? " (OG)" : ""}`;
+  return `${goal.minute} ${goal.athlete ? displayPlayerName(goal.athlete) : goal.team}${goal.ownGoal ? " (OG)" : ""}`;
 }
 
 function countLabel(count, noun) {
   return `${count} ${noun}${count === 1 ? "" : "s"}`;
+}
+
+function displayPlayerName(name = "") {
+  const cleaned = String(name || "").trim();
+  if (!cleaned || !cleaned.includes(" ")) return cleaned;
+  const parts = cleaned.split(/\s+/);
+  const particles = new Set(["da", "de", "del", "der", "di", "dos", "du", "la", "le", "van", "von"]);
+  const last = parts.at(-1);
+  const previous = parts.at(-2);
+  return previous && particles.has(previous.toLowerCase()) ? `${previous} ${last}` : last;
+}
+
+function displayStatName(item) {
+  return item?.isPlayer ? displayPlayerName(item.name) : item?.name || "";
 }
 
 function matchStoryLine(match) {
@@ -914,7 +928,7 @@ function matchStoryLine(match) {
   const yellows = match.cards.filter((card) => card.kind === "yellow").length;
   const ownGoals = match.goals.filter((goal) => goal.ownGoal).length;
   const topScorer = topMatchScorer(match);
-  if (topScorer && topScorer.goals > 1) stories.push(`${topScorer.name} ${topScorer.goals} goals`);
+  if (topScorer && topScorer.goals > 1) stories.push(`${displayPlayerName(topScorer.name)} ${topScorer.goals} goals`);
   if (ownGoals) stories.push(`${ownGoals} own goal${ownGoals === 1 ? "" : "s"}`);
   if (reds) stories.push(`${reds} red card${reds === 1 ? "" : "s"}`);
   else if (yellows >= 5) stories.push(`${yellows} yellow cards`);
@@ -1007,8 +1021,8 @@ function favoriteTeamPanel() {
         <p><b>${standing ? `Group ${standing.group}` : "Group"}</b><small>${standing ? `${standing.played} played / GD ${standing.gd > 0 ? `+${standing.gd}` : standing.gd}` : "Not available yet"}</small></p>
         <p class="wide-detail"><b>Latest</b><small>${escapeHtml(latestText)}</small></p>
         <p><b>Remaining</b><small>${remaining} match${remaining === 1 ? "" : "es"}</small></p>
-        <p><b>Top scorer</b><small>${scorer ? `${escapeHtml(scorer.name)}<span>${escapeHtml(countLabel(scorer.goals, "goal"))}</span>` : "No goals yet"}</small></p>
-        <p><b>Card watch</b><small>${cardWatch ? `${escapeHtml(cardWatch.name)}<span>${escapeHtml(cardWatch.detail)}</span>` : "No cards yet"}</small></p>
+        <p><b>Top scorer</b><small>${scorer ? `${escapeHtml(displayPlayerName(scorer.name))}<span>${escapeHtml(countLabel(scorer.goals, "goal"))}</span>` : "No goals yet"}</small></p>
+        <p><b>Card watch</b><small>${cardWatch ? `${escapeHtml(displayPlayerName(cardWatch.name))}<span>${escapeHtml(cardWatch.detail)}</span>` : "No cards yet"}</small></p>
         <p><b>Group rank</b><small>${rank ? `#${rank.place} of ${rank.total}` : "Not ranked yet"}</small></p>
       </div>
     </article>
@@ -1063,7 +1077,7 @@ function statsRows(items, config) {
   return `<ol class="stats-list">${items.map((item, index) => `
     <li>
       <span class="stats-rank">${index + 1}</span>
-      <strong>${escapeHtml(item.name)}</strong>
+      <strong>${escapeHtml(displayStatName(item))}</strong>
       <small>${escapeHtml(item.team || item.meta || "")}</small>
       <b>${escapeHtml(item.value)}</b>
     </li>
@@ -1191,15 +1205,16 @@ function eventMinuteValue(event) {
 }
 
 function eventLabel(event) {
-  if (event.kind === "goal") return event.ownGoal ? `Own goal ${event.athlete || event.team}` : `Goal ${event.athlete || event.team}`;
-  if (event.kind === "assist") return `Assist ${event.athlete || event.team}`;
-  if (event.kind === "yellow") return `Yellow card ${event.athlete || event.team}`;
-  if (event.kind === "red") return `Red card ${event.athlete || event.team}`;
+  const actor = event.athlete ? displayPlayerName(event.athlete) : event.team;
+  if (event.kind === "goal") return event.ownGoal ? `Own goal ${actor}` : `Goal ${actor}`;
+  if (event.kind === "assist") return `Assist ${actor}`;
+  if (event.kind === "yellow") return `Yellow card ${actor}`;
+  if (event.kind === "red") return `Red card ${actor}`;
   if (event.kind === "sub") return "Substitution";
-  if (event.kind === "save") return `Shot saved ${event.athlete || event.team}`.trim();
-  if (event.kind === "shotOn") return `Shot on target ${event.athlete || event.team}`.trim();
-  if (event.kind === "shotOff") return `Shot off target ${event.athlete || event.team}`.trim();
-  if (event.kind === "shotBlocked") return `Shot blocked ${event.athlete || event.team}`.trim();
+  if (event.kind === "save") return `Shot saved ${actor}`.trim();
+  if (event.kind === "shotOn") return `Shot on target ${actor}`.trim();
+  if (event.kind === "shotOff") return `Shot off target ${actor}`.trim();
+  if (event.kind === "shotBlocked") return `Shot blocked ${actor}`.trim();
   return event.type || event.team || "Event";
 }
 
@@ -1383,6 +1398,8 @@ function rankedScorers() {
     .sort((a, b) => b.goals - a.goals || a.name.localeCompare(b.name))
     .map((item) => ({
       name: item.name,
+      fullName: item.name,
+      isPlayer: true,
       value: String(item.goals),
       team: [...item.teams][0] || "",
       detail: `${item.goals} goal${item.goals === 1 ? "" : "s"}${item.teams.size ? ` / ${[...item.teams][0]}` : ""}`
@@ -1423,6 +1440,8 @@ function rankedAssists() {
     .sort((a, b) => b.assists - a.assists || a.name.localeCompare(b.name))
     .map((item) => ({
       name: item.name,
+      fullName: item.name,
+      isPlayer: true,
       value: String(item.assists),
       team: [...item.teams][0] || "",
       detail: `${item.assists} assist${item.assists === 1 ? "" : "s"}${item.teams.size ? ` / ${[...item.teams][0]}` : ""}`
@@ -1446,9 +1465,10 @@ function rankedCards() {
   state.matches.forEach((match) => {
     match.cards.forEach((card) => {
       const name = card.athlete || card.team || "Unknown";
-      const entry = totals.get(name) || { name, yellow: 0, red: 0, team: card.team || "" };
+      const entry = totals.get(name) || { name, yellow: 0, red: 0, team: card.team || "", isPlayer: Boolean(card.athlete) };
       if (card.kind === "red") entry.red += 1;
       if (card.kind === "yellow") entry.yellow += 1;
+      entry.isPlayer = entry.isPlayer || Boolean(card.athlete);
       totals.set(name, entry);
     });
   });
@@ -1456,6 +1476,8 @@ function rankedCards() {
     .sort((a, b) => (b.red * 2 + b.yellow) - (a.red * 2 + a.yellow) || a.name.localeCompare(b.name))
     .map((item) => ({
       name: item.name,
+      fullName: item.name,
+      isPlayer: item.isPlayer,
       value: `${item.yellow + item.red}`,
       team: item.team,
       detail: `${item.yellow}Y / ${item.red}R${item.team ? ` / ${item.team}` : ""}`
@@ -1467,9 +1489,10 @@ function rankedCardsByKind(kind) {
   state.matches.forEach((match) => {
     match.cards.filter((card) => card.kind === kind).forEach((card) => {
       const name = card.athlete || card.team || "Unknown";
-      const entry = totals.get(name) || { name, count: 0, team: card.team || "" };
+      const entry = totals.get(name) || { name, count: 0, team: card.team || "", isPlayer: Boolean(card.athlete) };
       entry.count += 1;
       if (card.team) entry.team = card.team;
+      entry.isPlayer = entry.isPlayer || Boolean(card.athlete);
       totals.set(name, entry);
     });
   });
@@ -1477,6 +1500,8 @@ function rankedCardsByKind(kind) {
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
     .map((item) => ({
       name: item.name,
+      fullName: item.name,
+      isPlayer: item.isPlayer,
       value: String(item.count),
       team: item.team,
       detail: `${item.count} ${kind === "yellow" ? "yellow" : "red"} card${item.count === 1 ? "" : "s"}${item.team ? ` / ${item.team}` : ""}`
@@ -1618,6 +1643,7 @@ function filterStatItems(items) {
   if (!state.query) return items;
   return items.filter((item) => searchableText([
     item.name,
+    item.fullName,
     item.team,
     item.meta,
     item.detail,
