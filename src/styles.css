@@ -686,16 +686,21 @@ input[type="search"]:disabled {
 
 .quick-stats {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 .quick-stats span {
-  padding: 7px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 0 8px;
   border-radius: 8px;
   background: rgba(12, 75, 53, .38);
   color: var(--muted);
   font-size: 12px;
   font-weight: 750;
+  line-height: 1;
   text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
