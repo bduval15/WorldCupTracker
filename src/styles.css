@@ -63,6 +63,17 @@ body {
     linear-gradient(180deg, #06120e 0%, #071323 48%, #040812 100%);
   color: var(--ink);
 }
+
+.window-drag-strip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 138px;
+  height: 38px;
+  z-index: 2147483647;
+  -webkit-app-region: drag;
+}
+
 button, input, select { font: inherit; }
 button, input, select, textarea, a, dialog, .match-card, .summary-card, .sidebar-live-match, .favorite-team-card {
   -webkit-app-region: no-drag;
