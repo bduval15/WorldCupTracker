@@ -878,9 +878,9 @@ function matchCard(match, showDetails) {
       <span>${formatMatchDate(match.date)} / ${escapeHtml(match.time)}</span>
     </div>
     ${showDetails ? `<div class="quick-stats">
-      <span>${matchGoalTotal(match)} goals</span>
-      <span>${match.cards.filter((card) => card.kind === "yellow").length} yellow</span>
-      <span>${match.cards.filter((card) => card.kind === "red").length} red</span>
+      <span>${countLabel(matchGoalTotal(match), "goal")}</span>
+      <span>${countLabel(match.cards.filter((card) => card.kind === "yellow").length, "yellow")}</span>
+      <span>${countLabel(match.cards.filter((card) => card.kind === "red").length, "red")}</span>
     </div>` : ""}
     ${story ? `<p class="match-story">${escapeHtml(story)}</p>` : ""}
     ${scoring ? `<p class="scorers">${escapeHtml(scoring)}</p>` : ""}
@@ -902,6 +902,10 @@ function teamLine(name, logo, score, abbr = "") {
 
 function goalScoringText(goal) {
   return `${goal.minute} ${goal.athlete || goal.team}${goal.ownGoal ? " (OG)" : ""}`;
+}
+
+function countLabel(count, noun) {
+  return `${count} ${noun}${count === 1 ? "" : "s"}`;
 }
 
 function matchStoryLine(match) {
@@ -1003,7 +1007,7 @@ function favoriteTeamPanel() {
         <p><b>${standing ? `Group ${standing.group}` : "Group"}</b><small>${standing ? `${standing.played} played / GD ${standing.gd > 0 ? `+${standing.gd}` : standing.gd}` : "Not available yet"}</small></p>
         <p class="wide-detail"><b>Latest</b><small>${escapeHtml(latestText)}</small></p>
         <p><b>Remaining</b><small>${remaining} match${remaining === 1 ? "" : "es"}</small></p>
-        <p><b>Top scorer</b><small>${scorer ? `${escapeHtml(scorer.name)}<span>${escapeHtml(`${scorer.goals} goal${scorer.goals === 1 ? "" : "s"}`)}</span>` : "No goals yet"}</small></p>
+        <p><b>Top scorer</b><small>${scorer ? `${escapeHtml(scorer.name)}<span>${escapeHtml(countLabel(scorer.goals, "goal"))}</span>` : "No goals yet"}</small></p>
         <p><b>Card watch</b><small>${cardWatch ? `${escapeHtml(cardWatch.name)}<span>${escapeHtml(cardWatch.detail)}</span>` : "No cards yet"}</small></p>
         <p><b>Group rank</b><small>${rank ? `#${rank.place} of ${rank.total}` : "Not ranked yet"}</small></p>
       </div>
@@ -1346,7 +1350,7 @@ function favoriteTeamCardWatch() {
   });
   return [...totals.values()]
     .sort((a, b) => (b.red * 2 + b.yellow) - (a.red * 2 + a.yellow) || a.name.localeCompare(b.name))
-    .map((item) => ({ ...item, detail: `${item.yellow} yellow / ${item.red} red` }))[0] || null;
+    .map((item) => ({ ...item, detail: `${countLabel(item.yellow, "yellow")} / ${countLabel(item.red, "red")}` }))[0] || null;
 }
 
 function matchImportanceBadges(match) {
