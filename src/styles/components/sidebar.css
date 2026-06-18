@@ -80,8 +80,26 @@
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 9px 10px;
-  background: rgba(255, 255, 255, .04);
+  background: #151d26;
   color: var(--ink);
+  color-scheme: dark;
+  cursor: pointer;
+  scrollbar-color: rgba(167, 176, 188, .68) #151d26;
+}
+
+.favorite-picker select:hover {
+  border-color: rgba(255, 255, 255, .2);
+  background: #19232e;
+}
+
+.favorite-picker select option {
+  background: #151d26;
+  color: var(--ink);
+}
+
+.favorite-picker select option:checked {
+  background: var(--green);
+  color: #07110d;
 }
 
 .sidebar-live-match {

@@ -319,6 +319,39 @@
   flex-direction: column;
   gap: 12px;
   overflow: hidden;
+  padding-top: 17px;
+}
+
+.pulse-panel .favorite-team-card {
+  border-top-color: var(--team-primary);
+}
+
+.favorite-team-card::before,
+.favorite-team-card::after,
+.favorite-team-main::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  height: 3px;
+  pointer-events: none;
+}
+
+.favorite-team-card::before {
+  left: 0;
+  width: 34%;
+  background: var(--team-primary);
+}
+
+.favorite-team-card::after {
+  left: 34%;
+  width: 33%;
+  background: var(--team-secondary);
+}
+
+.favorite-team-main::before {
+  left: 67%;
+  width: 33%;
+  background: var(--team-third);
 }
 
 .favorite-team-card[data-favorite-match-id] {
@@ -334,6 +367,7 @@
 }
 
 .favorite-team-main {
+  position: static;
   display: grid;
   grid-template-columns: 1fr;
   gap: 10px;
