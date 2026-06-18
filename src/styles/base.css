@@ -1,0 +1,156 @@
+:root {
+  color-scheme: dark;
+  --ink: #f5f7fa;
+  --muted: #a7b0bc;
+  --paper: #0b0f14;
+  --panel: #111820;
+  --panel-soft: #151d26;
+  --panel-hover: rgba(255, 255, 255, .06);
+  --line: rgba(255, 255, 255, .12);
+  --line-strong: rgba(255, 255, 255, .2);
+  --red: #e05a68;
+  --green: #35c78a;
+  --yellow: #d8b756;
+  --blue: #72a7e8;
+  --blue-deep: #2d5d9b;
+  --gold: #d8b756;
+  --maroon: #9e4c58;
+  --pitch: #12392f;
+  --pitch-deep: #0e241f;
+  --team-primary: var(--green);
+  --team-secondary: var(--gold);
+  --team-third: var(--red);
+  --surface: rgba(255, 255, 255, .03);
+  --surface-raised: rgba(255, 255, 255, .045);
+  --surface-hover: rgba(255, 255, 255, .06);
+  --focus-ring: 0 0 0 3px rgba(53, 199, 138, .18);
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(167, 176, 188, .58) rgba(255, 255, 255, .04);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, .035);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb {
+  min-height: 48px;
+  border: 2px solid #0b0f14;
+  border-radius: 999px;
+  background: rgba(167, 176, 188, .55);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(213, 219, 227, .72);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+body {
+  margin: 0;
+  background: #0b0f14;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button,
+input,
+select,
+textarea,
+a,
+dialog,
+.match-card,
+.summary-card,
+.sidebar-live-match,
+.favorite-team-card {
+  -webkit-app-region: no-drag;
+}
+
+button {
+  letter-spacing: 0;
+}
+
+input,
+select,
+button {
+  outline: none;
+}
+
+input[type="search"] {
+  width: 100%;
+  min-width: 180px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 11px 12px;
+  background: rgba(255, 255, 255, .04);
+  color: var(--ink);
+}
+
+input[type="search"]:focus,
+select:focus,
+button:focus-visible {
+  border-color: var(--green);
+  box-shadow: var(--focus-ring);
+}
+
+input[type="search"]:disabled {
+  cursor: default;
+  opacity: .72;
+  color: var(--muted);
+  border-color: rgba(255, 255, 255, .08);
+  background: rgba(255, 255, 255, .025);
+}
+
+select {
+  color: var(--ink);
+}
+
+h1 {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+h2,
+h3 {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.section-title {
+  margin: 8px 0 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.section-title::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 9px;
+  border-radius: 50%;
+  background: var(--green);
+  vertical-align: 2px;
+}
