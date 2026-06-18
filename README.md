@@ -1,7 +1,8 @@
 # World Cup 2026 Live
 
 A Windows desktop app for following the FIFA World Cup 2026 from one live dashboard.
-<img width="1180" height="778" alt="wCTracker" src="https://github.com/user-attachments/assets/c0612891-dc36-46a9-b807-061e4e3a4720" />
+<img width="1181" height="778" alt="wCTracker" src="https://github.com/user-attachments/assets/91076c25-8245-406a-8ca1-1aa5fa24f0f1" />
+
 
 
 World Cup 2026 Live includes live match cards, group tables, standings, bracket paths, team favorites, player and team stats, timelines, goals, cards, and match detail pages.
