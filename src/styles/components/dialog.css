@@ -95,6 +95,12 @@ dialog form {
   font-weight: 600;
 }
 
+body.has-favorite .match-clock {
+  border-color: color-mix(in srgb, var(--team-primary) 44%, rgba(255, 255, 255, .14));
+  background: color-mix(in srgb, var(--team-primary) 12%, rgba(255, 255, 255, .03));
+  color: var(--team-primary);
+}
+
 .detail-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

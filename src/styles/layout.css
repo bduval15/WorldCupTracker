@@ -48,6 +48,10 @@
   text-transform: uppercase;
 }
 
+body.has-favorite .eyebrow {
+  color: var(--team-primary);
+}
+
 .stack,
 .match-center,
 .bracket-page,

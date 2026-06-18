@@ -139,6 +139,9 @@ h3 {
 }
 
 .section-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
   margin: 8px 0 0;
   font-size: 20px;
   font-weight: 600;
@@ -146,11 +149,27 @@ h3 {
 
 .section-title::before {
   content: "";
-  display: inline-block;
+  display: block;
+  flex: 0 0 auto;
   width: 7px;
   height: 7px;
-  margin-right: 9px;
   border-radius: 50%;
   background: var(--green);
-  vertical-align: 2px;
+}
+
+body.has-favorite .section-title::before {
+  width: 29px;
+  border-radius: 0;
+  background:
+    radial-gradient(circle at 3.5px 50%, var(--team-primary) 0 3.5px, transparent 3.6px),
+    radial-gradient(circle at 14.5px 50%, var(--team-secondary) 0 3.5px, transparent 3.6px),
+    radial-gradient(circle at 25.5px 50%, var(--team-third) 0 3.5px, transparent 3.6px);
+  box-shadow: none;
+}
+
+body.has-favorite input[type="search"]:focus,
+body.has-favorite select:focus,
+body.has-favorite button:focus-visible {
+  border-color: var(--team-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--team-primary) 20%, transparent);
 }

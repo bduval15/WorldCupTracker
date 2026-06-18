@@ -211,7 +211,9 @@ function updateFavoriteIdentity(appState) {
   els.brandMark.src = flag || "assets/soccer-ball.svg";
   els.brandMark.classList.toggle("is-flag", Boolean(flag));
   mark?.classList.toggle("is-favorite", Boolean(flag));
-  els.brandSubtitle.textContent = favorite || "2026 Matchday";
+  document.body.classList.toggle("has-favorite", Boolean(favorite));
+  els.brandTitle.textContent = favorite || "World Cup";
+  els.brandSubtitle.textContent = favorite ? "World Cup" : "2026 Matchday";
   els.favoriteSelect.value = favorite;
   applyFavoriteTheme(favorite);
 }

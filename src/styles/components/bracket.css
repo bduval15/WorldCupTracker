@@ -147,6 +147,10 @@
   border-color: rgba(53, 199, 138, .58);
 }
 
+body.has-favorite .bracket-match.is-live {
+  border-color: var(--team-primary);
+}
+
 .bracket-match.is-final {
   border-color: rgba(216, 183, 86, .45);
 }
@@ -191,6 +195,11 @@
   box-shadow: inset 3px 0 0 var(--green);
 }
 
+body.has-favorite .bracket-team.favorite-team {
+  background: color-mix(in srgb, var(--team-primary) 13%, transparent);
+  box-shadow: inset 3px 0 0 var(--team-primary);
+}
+
 .bracket-team img {
   width: 22px;
   height: 22px;
@@ -223,6 +232,10 @@
 
 .bracket-team.winner strong {
   color: var(--green);
+}
+
+body.has-favorite .bracket-team.winner strong {
+  color: var(--team-primary);
 }
 
 .bracket-placeholder {

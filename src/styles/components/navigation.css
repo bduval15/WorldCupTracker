@@ -36,6 +36,11 @@
   font-weight: 600;
 }
 
+body.has-favorite .nav-button.active {
+  border-left-color: var(--team-primary);
+  background: color-mix(in srgb, var(--team-primary) 14%, rgba(255, 255, 255, .05));
+}
+
 .nav-button:hover,
 .action-button:hover,
 .filter-chip:hover,
@@ -62,6 +67,12 @@
   background: rgba(53, 199, 138, .1);
   color: #fff;
   font-weight: 600;
+}
+
+body.has-favorite .filter-chip.active,
+body.has-favorite .filter-chip[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--team-primary) 58%, rgba(255, 255, 255, .2));
+  background: color-mix(in srgb, var(--team-primary) 13%, rgba(255, 255, 255, .03));
 }
 
 .group-filter {
@@ -109,6 +120,11 @@
   border-color: rgba(53, 199, 138, .5);
   background: rgba(53, 199, 138, .1);
   font-weight: 600;
+}
+
+body.has-favorite .stats-tab.active {
+  border-color: color-mix(in srgb, var(--team-primary) 55%, rgba(255, 255, 255, .18));
+  background: color-mix(in srgb, var(--team-primary) 12%, rgba(255, 255, 255, .03));
 }
 
 .stats-tab:hover {

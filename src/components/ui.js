@@ -13,6 +13,7 @@ export const els = {
   compactLiveDetail: document.getElementById("compactLiveDetail"),
   sidebarLiveMatch: document.getElementById("sidebarLiveMatch"),
   brandMark: document.getElementById("brandMark"),
+  brandTitle: document.getElementById("brandTitle"),
   brandSubtitle: document.getElementById("brandSubtitle"),
   favoriteSelect: document.getElementById("favoriteTeamSelect"),
   compactButton: document.getElementById("compactModeButton"),
